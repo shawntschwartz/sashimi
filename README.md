@@ -1,6 +1,6 @@
 # fish-segmentation
 
-We present a software module written in *Python* (Version 3.6.5) that is accessible by cloning the GitHub repository [https://github.com/ShawnTylerSchwartz/fish-segmentation](https://github.com/ShawnTylerSchwartz/fish-segmentation). Training and inspiration based on Matterport's open-source Keras and TensorFlow implementation of Mask R-CNN [https://github.com/matterport/Mask_RCNN](https://github.com/matterport/Mask_RCNN){:target="_blank"}.
+We present a software module written in *Python* (Version 3.6.5) that is accessible by cloning the GitHub repository [https://github.com/ShawnTylerSchwartz/fish-segmentation](https://github.com/ShawnTylerSchwartz/fish-segmentation). Training and inspiration based on Matterport's open-source Keras and TensorFlow implementation of Mask R-CNN [https://github.com/matterport/Mask_RCNN](https://github.com/matterport/Mask_RCNN).
 
 To get started, clone the repository:
 ```
