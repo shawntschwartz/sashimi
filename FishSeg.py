@@ -136,8 +136,8 @@ def execute_fish_image_processing(model, fish_set):
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(description='Remove backgrounds from fish images and identify taxanomical family.')
-    parser.add_argument('--input', required=True, metavar="/input/path/to/fish/images", help='Directory of fish images to remove backgrounds from or to identify')
+    parser = argparse.ArgumentParser(description='Remove backgrounds from fish images.')
+    parser.add_argument('--input', required=True, metavar="/input/path/to/fish/images", help='Directory of fish images to remove backgrounds from')
     parser.add_argument('--output', required=True, metavar="/output/path/for/background-removed/fish/images", help='Directory to place background-removed fish images in')
 
     args = parser.parse_args()
