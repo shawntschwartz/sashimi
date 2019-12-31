@@ -11,6 +11,8 @@ import sys
 import skimage.io
 import numpy as np
 import datetime
+import urllib.request
+import shutil
 from zipfile import ZipFile
 from PIL import Image
 from fishseg import core
@@ -27,10 +29,9 @@ MODEL_DIR = os.path.join(ROOT_DIR, "models", "fish_segmentation_models")
 WEIGHTS_PATH = os.path.join(ROOT_DIR, MODEL_DIR, "fish_segmentation_model_schwartz_v1.h5")
 DATASET_DIR = os.path.join(ROOT_DIR, "fishseg")
 
-MODEL_ZIP_FILE = "fish_segmentation_model_schwartz_v1.h5.zip"
+MODEL_URL = "https://github.com/ShawnTylerSchwartz/fish-segmentation/releases/download/v1.0/fish_segmentation_model_schwartz_v1.h5"
 TRAIN_ZIP_FILE = "train.zip"
 VAL_ZIP_FILE = "val.zip"
-MODEL_ZIP_PATH = os.path.join(ROOT_DIR, MODEL_DIR)
 TRAIN_ZIP_PATH = os.path.join(ROOT_DIR, "fishseg")
 VAL_ZIP_PATH = os.path.join(ROOT_DIR, "fishseg")
 
@@ -84,6 +85,12 @@ def config_setup():
     dataset.prepare()
 
     return config, dataset
+
+def download_model(URL, destination):
+    print("Downloading fish segmentation model to",destination,"...")
+    with urllib.request.urlopen(URL) as resp, open(destination, 'wb') as out:
+        shutil.copyfileobj(resp, out)
+    print("Fish segmentation model successfully downloaded!")
 
 def unpack_zip(path, file):
     print("Unpacking asset at: ",path,"/",file,sep="")
@@ -177,7 +184,7 @@ if __name__ == '__main__':
 
 #unpack
 if not os.path.exists(WEIGHTS_PATH):
-    unpack_zip(MODEL_ZIP_PATH, MODEL_ZIP_FILE)
+    download_model(MODEL_URL, WEIGHTS_PATH)
 if not os.path.exists(os.path.join(ROOT_DIR, "fishseg", "train")):
     unpack_zip(TRAIN_ZIP_PATH, TRAIN_ZIP_FILE)
 if not os.path.exists(os.path.join(ROOT_DIR, "fishseg", "val")):
