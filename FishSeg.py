@@ -11,8 +11,9 @@ import sys
 import skimage.io
 import numpy as np
 import datetime
+from zipfile import ZipFile
 from PIL import Image
-from fishseg import fishseg
+from fishseg import core
 from mrcnn import utils
 from mrcnn import visualize
 from mrcnn.visualize import display_images
@@ -26,8 +27,15 @@ MODEL_DIR = os.path.join(ROOT_DIR, "models", "fish_segmentation_models")
 WEIGHTS_PATH = os.path.join(ROOT_DIR, MODEL_DIR, "fish_segmentation_model_schwartz_v1.h5")
 DATASET_DIR = os.path.join(ROOT_DIR, "fishseg")
 
+MODEL_ZIP_FILE = "fish_segmentation_model_schwartz_v1.h5.zip"
+TRAIN_ZIP_FILE = "train.zip"
+VAL_ZIP_FILE = "val.zip"
+MODEL_ZIP_PATH = os.path.join(ROOT_DIR, MODEL_DIR)
+TRAIN_ZIP_PATH = os.path.join(ROOT_DIR, "fishseg")
+VAL_ZIP_PATH = os.path.join(ROOT_DIR, "fishseg")
+
 def welcome_message():
-    print("Fish Segmentation [Version 1.0.0] built by Shawn T. Schwartz (2019) at Alfaro Lab, UCLA.")
+    print("Fish Segmentation [Version 1.0] built by Shawn T. Schwartz (2019) at Alfaro Lab, UCLA.")
     print("Contact: shawnschwartz@ucla.edu")
     print("Website: https://shawntylerschwartz.com")
     print("Github: @ShawnTylerSchwartz")
@@ -49,8 +57,8 @@ def welcome_fish():
            /__/
     """)
 
-def exit_message():
-    print("All processess completed...\n")
+def exit_message(time):
+    print("All processess completed...Total time to complete process: ",time,".\n",sep="")
 
 def exit_fish():
     print("""
@@ -62,7 +70,7 @@ def exit_fish():
     """)
 
 def config_setup():
-    config = fishseg.FishSegConfig()
+    config = core.FishSegConfig()
 
     class InferenceConfig(config.__class__):
         GPU_COUNT = 1
@@ -71,11 +79,17 @@ def config_setup():
     config = InferenceConfig()
     config.display()
 
-    dataset = fishseg.FishSegDataset()
+    dataset = core.FishSegDataset()
     dataset.load_custom(DATASET_DIR, "val")
     dataset.prepare()
 
     return config, dataset
+
+def unpack_zip(path, file):
+    print("Unpacking asset at: ",path,"/",file,sep="")
+    zip = ZipFile(os.path.join(path, file))
+    zip.extractall(path)
+    zip.close()
 
 def get_fishes(dir):
     desired_exts = ['jpg', 'jpeg', 'png']
@@ -108,19 +122,20 @@ def remove_bg(fish_img, mask, fish_name):
 def save_fish(fish_img, fish_name):
     bg_removed_img = Image.fromarray(fish_img, 'RGBA')
     bg_removed_img.save((os.path.join(ROOT_DIR, args.output, fish_name+".png")), "PNG")
-    print("Successfully saved as ===> "+fish_name+".png  in  /"+args.output+"\n")
+    print("Successfully saved as ===> ",fish_name,".png  in  /",args.output,"\n",sep="")
 
 def execute_fish_image_processing(model, fish_set):
-    if not os.path.exists(os.path.join(ROOT_DIR, "_logs")):
-        os.mkdir(os.path.join(ROOT_DIR, "_logs"))
+    if not os.path.exists(os.path.join(ROOT_DIR, "logs")):
+        os.mkdir(os.path.join(ROOT_DIR, "logs"))
     if not os.path.exists(os.path.join(ROOT_DIR, args.output)):
         os.mkdir(os.path.join(ROOT_DIR, args.output))
-    bgremoved_filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + '_removebg.txt'
-    bgremoved_log_file = open(os.path.join(ROOT_DIR, "_logs", bgremoved_filename), 'w')
+    elapsed_times = []
+    bgremoved_filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + '_segmentation.csv'
+    bgremoved_log_file = open(os.path.join(ROOT_DIR, "logs", bgremoved_filename), 'w')
     for counter, fish in enumerate(fish_set, start=1):
         start = datetime.datetime.now()
         loaded_fish = get_fish_img(fish)
-        print("Classifing (",counter,"/",len(fish_set),"): ",fish)
+        print("Segmenting (",counter,"/",len(fish_set),"): ",fish,sep="")
         fish_detection_result = detect_mask(model, loaded_fish)
         tmp_masked_image, tmp_mask = draw_mask(loaded_fish, fish_detection_result)
         mod_filename = fish.split('.')
@@ -130,8 +145,20 @@ def execute_fish_image_processing(model, fish_set):
         elapsed_time = end - start
         datestamp = datetime.datetime.utcnow()
         output_path = "/"+args.output
-        bgremoved_log_file.write("%s\t%s\t%s\t%s\n" % (datestamp, fish, output_path, elapsed_time))
+        bgremoved_log_file.write("%s,%s,%s,%s\n" % (datestamp, fish, output_path, elapsed_time))
+        elapsed_times.append(elapsed_time)
     bgremoved_log_file.close()
+    return sum_time(elapsed_times)
+
+def sum_time(elapsed_times):
+    #Adapted from https://stackoverflow.com/questions/2780897/python-summing-up-time/28950926
+    sum = datetime.timedelta()
+    for time in elapsed_times:
+        timestr = str(time)
+        (h, m, s) = timestr.split(':')
+        d = datetime.timedelta(hours=float(h), minutes=float(m), seconds=float(s))
+        sum += d
+    return sum
 
 if __name__ == '__main__':
     import argparse
@@ -148,6 +175,14 @@ if __name__ == '__main__':
     print("Input Directory for Fish Images: ", args.input)
     print("Output Location for Background-Removed Fish Images: ", args.output)
 
+#unpack
+if not os.path.exists(WEIGHTS_PATH):
+    unpack_zip(MODEL_ZIP_PATH, MODEL_ZIP_FILE)
+if not os.path.exists(os.path.join(ROOT_DIR, "fishseg", "train")):
+    unpack_zip(TRAIN_ZIP_PATH, TRAIN_ZIP_FILE)
+if not os.path.exists(os.path.join(ROOT_DIR, "fishseg", "val")):
+    unpack_zip(VAL_ZIP_PATH, VAL_ZIP_FILE)
+
 config, dataset = config_setup()
 
 welcome_message()
@@ -159,8 +194,10 @@ model.load_weights(WEIGHTS_PATH, by_name=True)
 print("Fish segmentation model successfully loaded from: ", WEIGHTS_PATH, "\n")
 
 fish_files = get_fishes(args.input)
+if len(fish_files) < 1:
+    print("No image files found in specified input directory.")
 
-execute_fish_image_processing(model, fish_files)
+total_elapsed_time = execute_fish_image_processing(model, fish_files)
 
 exit_fish()
-exit_message()
+exit_message(total_elapsed_time)
