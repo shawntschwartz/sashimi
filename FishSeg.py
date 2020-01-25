@@ -171,8 +171,11 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Remove backgrounds from fish images.')
-    parser.add_argument('--input', required=True, metavar="/input/path/to/fish/images", help='Directory of fish images to remove backgrounds from')
-    parser.add_argument('--output', required=True, metavar="/output/path/for/background-removed/fish/images", help='Directory to place background-removed fish images in')
+    parser.add_argument('--input', '-i', required=True, metavar="/input/path/to/fish/images", help='Directory of fish images to remove backgrounds from')
+    parser.add_argument('--output', '-o', required=True, metavar="/output/path/for/background-removed/fish/images", help='Directory to place background-removed fish images in')
+    parser.add_argument('--red', '-r', required=False, metavar="0", help='(r)ed itensity values (0 to 1) for colordistance background mask')
+    parser.add_argument('--green', '-g', required=False, metavar="0.4", help='(g)reen itensity values (0 to 1) for colordistance background mask')
+    parser.add_argument('--blue', '-b', required=False, metavar="0", help='(b)lue itensity values (0 to 1) for colordistance background mask')
 
     args = parser.parse_args()
 
