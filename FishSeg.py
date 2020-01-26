@@ -126,6 +126,60 @@ def remove_bg(fish_img, mask, fish_name):
     print("Background successfully removed!")
     save_fish(alpha_fish, fish_name)
 
+def alpha_composite(src, dst, fish_name):
+    '''
+    Return the alpha composite of src and dst.
+
+    Parameters:
+    src -- PIL RGBA Image object
+    dst -- PIL RGBA Image object
+    fish_name -- Name of Fish File
+
+    The algorithm comes from http://en.wikipedia.org/wiki/Alpha_compositing
+    '''
+    # Modified from https://stackoverflow.com/questions/9166400/convert-rgba-png-to-rgb-with-pil/9166671#9166671
+    # http://stackoverflow.com/a/3375291/190597
+    # http://stackoverflow.com/a/9166671/190597
+    src = np.asarray(src)
+    dst = np.asarray(dst)
+    out = np.empty(src.shape, dtype = 'float')
+    alpha = np.index_exp[:, :, 3:]
+    rgb = np.index_exp[:, :, :3]
+    src_a = src[alpha]/255.0
+    dst_a = dst[alpha]/255.0
+    out[alpha] = src_a+dst_a*(1-src_a)
+    old_setting = np.seterr(invalid = 'ignore')
+    out[rgb] = (src[rgb]*src_a + dst[rgb]*dst_a*(1-src_a))/out[alpha]
+    np.seterr(**old_setting)    
+    out[alpha] *= 255
+    np.clip(out,0,255)
+    out = out.astype('uint8')
+    save_fish(out, fish_name)
+    print("Color filled fish successfully generated!")
+
+def fill_bg(fish_img, mask, fish_name, r, g, b):
+    red = int(r * 255)
+    green = int(g * 255)
+    blue = int(b * 255)
+    height, width = fish_img.shape[:2]
+    alpha_fish = np.dstack((fish_img, np.zeros((height, width), dtype=np.uint8)+255))
+    alpha_fish[:,:,3] = alpha_fish[:,:,3] * mask[:,:,0]
+    alpha_fish_img = Image.fromarray(alpha_fish, 'RGBA')
+    filled_bg_img = Image.new('RGBA', size = alpha_fish_img.size, color = (red, green, blue, 255))
+    alpha_composite(alpha_fish_img, filled_bg_img, fish_name)
+
+def make_silhouette(fish_img, mask, fish_name):
+    height, width = fish_img.shape[:2]
+    alpha_fish = np.dstack((fish_img, np.zeros((height, width), dtype=np.uint8)+255))
+    alpha_fish[:,:,3] = alpha_fish[:,:,3] * mask[:,:,0]
+    r, g, b, a = np.rollaxis(alpha_fish, axis = -1)
+    r[a == 255] = 0
+    g[a == 255] = 0
+    b[a == 255] = 0
+    silhouette_fish = np.dstack([r, g, b, a])
+    print("Silhouette fish successfully generated!")
+    save_fish(silhouette_fish, fish_name)
+
 def save_fish(fish_img, fish_name):
     bg_removed_img = Image.fromarray(fish_img, 'RGBA')
     bg_removed_img.save((os.path.join(ROOT_DIR, args.output, fish_name+".png")), "PNG")
@@ -147,7 +201,13 @@ def execute_fish_image_processing(model, fish_set):
         tmp_masked_image, tmp_mask = draw_mask(loaded_fish, fish_detection_result)
         mod_filename = fish.split('.')
         mod_filename = mod_filename[0]
-        remove_bg(tmp_masked_image, tmp_mask, mod_filename)
+        #check if color args are passed
+        if(args.red is not None and args.green is not None and args.blue is not None):
+            fill_bg(tmp_masked_image, tmp_mask, mod_filename, args.red, args.green, args.blue)
+        elif(args.silhouette == 1):
+            make_silhouette(tmp_masked_image, tmp_mask, mod_filename)
+        else:
+            remove_bg(tmp_masked_image, tmp_mask, mod_filename)
         end = datetime.datetime.now()
         elapsed_time = end - start
         datestamp = datetime.datetime.utcnow()
@@ -173,9 +233,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Remove backgrounds from fish images.')
     parser.add_argument('--input', '-i', required=True, metavar="/input/path/to/fish/images", help='Directory of fish images to remove backgrounds from')
     parser.add_argument('--output', '-o', required=True, metavar="/output/path/for/background-removed/fish/images", help='Directory to place background-removed fish images in')
-    parser.add_argument('--red', '-r', required=False, metavar="0", help='(r)ed itensity values (0 to 1) for colordistance background mask')
-    parser.add_argument('--green', '-g', required=False, metavar="0.4", help='(g)reen itensity values (0 to 1) for colordistance background mask')
-    parser.add_argument('--blue', '-b', required=False, metavar="0", help='(b)lue itensity values (0 to 1) for colordistance background mask')
+    parser.add_argument('--red', '-r', required=False, type=float, metavar="0", help='(r)ed itensity values (0 to 1) for colordistance background mask')
+    parser.add_argument('--green', '-g', required=False, type=float, metavar="0.4", help='(g)reen itensity values (0 to 1) for colordistance background mask')
+    parser.add_argument('--blue', '-b', required=False, type=float, metavar="0", help='(b)lue itensity values (0 to 1) for colordistance background mask')
+    parser.add_argument('--silhouette', '-s', required=False, type=int, metavar="1", help='set to 1 (true) to make a silhouette of the segmented fish image')
 
     args = parser.parse_args()
 
