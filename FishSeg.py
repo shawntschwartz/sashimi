@@ -168,6 +168,14 @@ def fill_bg(fish_img, mask, fish_name, r, g, b):
     filled_bg_img = Image.new('RGBA', size = alpha_fish_img.size, color = (red, green, blue, 255))
     alpha_composite(alpha_fish_img, filled_bg_img, fish_name)
 
+def fill_bg_only(fish_img, fish_name, r, g, b):
+    red = int(r * 255)
+    green = int(g * 255)
+    blue = int(b * 255)
+    fish_img = Image.fromarray(fish_img, 'RGBA')
+    filled_bg_img = Image.new('RGBA', size = fish_img.size, color = (red, green, blue, 255))
+    alpha_composite(fish_img, filled_bg_img, fish_name)
+
 def make_silhouette(fish_img, mask, fish_name):
     height, width = fish_img.shape[:2]
     alpha_fish = np.dstack((fish_img, np.zeros((height, width), dtype=np.uint8)+255))
@@ -195,15 +203,22 @@ def execute_fish_image_processing(model, fish_set):
     bgremoved_log_file = open(os.path.join(ROOT_DIR, "logs", bgremoved_filename), 'w')
     for counter, fish in enumerate(fish_set, start=1):
         start = datetime.datetime.now()
-        loaded_fish = get_fish_img(fish)
-        print("Segmenting (",counter,"/",len(fish_set),"): ",fish,sep="")
-        fish_detection_result = detect_mask(model, loaded_fish)
-        tmp_masked_image, tmp_mask = draw_mask(loaded_fish, fish_detection_result)
+        if((args.segmentation is None) or (args.segmentation == 1)):
+            loaded_fish = get_fish_img(fish)
+            print("Segmenting (",counter,"/",len(fish_set),"): ",fish,sep="")
+            fish_detection_result = detect_mask(model, loaded_fish)
+            tmp_masked_image, tmp_mask = draw_mask(loaded_fish, fish_detection_result)
+        else:
+            #loaded_fish = Image.open(fish).convert('RGBA')
+            loaded_fish = get_fish_img(fish)
+            print("Filling background of (",counter,"/",len(fish_set),"): ",fish,sep="")
         mod_filename = fish.split('.')
         mod_filename = mod_filename[0]
         #check if color args are passed
-        if(args.red is not None and args.green is not None and args.blue is not None):
+        if((args.red is not None and args.green is not None and args.blue is not None) and (args.segmentation == 1 or args.segmentation is None)):
             fill_bg(tmp_masked_image, tmp_mask, mod_filename, args.red, args.green, args.blue)
+        elif((args.red is not None and args.green is not None and args.blue is not None) and (args.segmentation == 0)):
+            fill_bg_only(loaded_fish, mod_filename, args.red, args.green, args.blue)
         elif(args.silhouette == 1):
             make_silhouette(tmp_masked_image, tmp_mask, mod_filename)
         else:
@@ -237,6 +252,7 @@ if __name__ == '__main__':
     parser.add_argument('--green', '-g', required=False, type=float, metavar="0.4", help='(g)reen intensity values (0 to 1) for colordistance background mask')
     parser.add_argument('--blue', '-b', required=False, type=float, metavar="0", help='(b)lue intensity values (0 to 1) for colordistance background mask')
     parser.add_argument('--silhouette', '-s', required=False, type=int, metavar="1", help='set to 1 (true) to make a silhouette of the segmented fish image')
+    parser.add_argument('--segmentation', '-z', required=False, type=int, metavar="0", help='set to 0 (false) to fill backgrounds of previously segmented fish images with desired background colors')
 
     args = parser.parse_args()
 
