@@ -26,7 +26,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(ROOT_DIR, "models", "fish_segmentation_models")
+MODEL_DIR = os.path.join(ROOT_DIR, "models", "segmentation_models")
 WEIGHTS_PATH = os.path.join(ROOT_DIR, MODEL_DIR, "fish_segmentation_model_schwartz_v1.h5")
 DATASET_DIR = os.path.join(ROOT_DIR, "sashimi")
 
@@ -243,6 +243,7 @@ def sum_time(elapsed_times):
         sum += d
     return sum
 
+# Main Run
 if __name__ == '__main__':
     import argparse
 
@@ -254,6 +255,7 @@ if __name__ == '__main__':
     parser.add_argument('--blue', '-b', required=False, type=float, metavar="0", help='(b)lue intensity values (0 to 1) for colordistance background mask')
     parser.add_argument('--silhouette', '-s', required=False, type=int, metavar="1", help='set to 1 (true) to make a silhouette of the segmented organismal image')
     parser.add_argument('--segmentation', '-z', required=False, type=int, metavar="0", help='set to 0 (false) to fill backgrounds of previously segmented organismal images with desired background colors')
+    parser.add_argument('--model', '-m', required=False, metavar="/path/to/trained/model", help='Path to custom trained model (.h5 extension)')
 
     args = parser.parse_args()
 
@@ -264,11 +266,11 @@ if __name__ == '__main__':
     print("Output Location for Background-Removed Organismal Images: ", args.output)
 
 #unpack
-if not os.path.exists(WEIGHTS_PATH):
+if not os.path.exists(WEIGHTS_PATH) and not args.model:
     download_model(MODEL_URL, WEIGHTS_PATH)
-if not os.path.exists(os.path.join(ROOT_DIR, "sashimi", "train")):
+if not os.path.exists(os.path.join(ROOT_DIR, "sashimi", "train")) and not args.model:
     unpack_zip(TRAIN_ZIP_PATH, TRAIN_ZIP_FILE)
-if not os.path.exists(os.path.join(ROOT_DIR, "sashimi", "val")):
+if not os.path.exists(os.path.join(ROOT_DIR, "sashimi", "val")) and not args.model:
     unpack_zip(VAL_ZIP_PATH, VAL_ZIP_FILE)
 
 config, dataset = config_setup()
@@ -276,14 +278,21 @@ config, dataset = config_setup()
 welcome_message()
 welcome_fish()
 
-model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
-print("Loading demo fish segmentation model: ", WEIGHTS_PATH)
-model.load_weights(WEIGHTS_PATH, by_name=True)
-print("Demo fish segmentation model successfully loaded from: ", WEIGHTS_PATH, "\n")
+if not args.model:
+    model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
+    print("Loading demo fish segmentation model: ", WEIGHTS_PATH)
+    model.load_weights(WEIGHTS_PATH, by_name=True)
+    print("Demo fish segmentation model successfully loaded from: ", WEIGHTS_PATH, "\n")
+else:
+    WEIGHTS_PATH = args.model
+    model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
+    print("Loading custom organismal segmentation model: ", WEIGHTS_PATH)
+    model.load_weights(WEIGHTS_PATH, by_name=True)
+    print("Custom organismal segmentation model successfully loaded from source: ", WEIGHTS_PATH, "\n")
 
 fish_files = get_fishes(args.input)
 if len(fish_files) < 1:
-    print("No image files found in specified input directory.")
+    print("No organismal image files found in specified input directory.")
 
 total_elapsed_time = execute_fish_image_processing(model, fish_files)
 
