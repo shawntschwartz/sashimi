@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
+# sashimi Version 1.0.0
 # Created by Shawn Schwartz 11/07/2019
 # <shawnschwartz@ucla.edu>
 
-version = "FishSeg"
-build = "v1.0 - 20191231"
+version = "sashimi"
+build = "v1.0.0 - 20191231"
 
 import os
 import sys
@@ -27,16 +28,16 @@ warnings.filterwarnings("ignore")
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(ROOT_DIR, "models", "fish_segmentation_models")
 WEIGHTS_PATH = os.path.join(ROOT_DIR, MODEL_DIR, "fish_segmentation_model_schwartz_v1.h5")
-DATASET_DIR = os.path.join(ROOT_DIR, "fishseg")
+DATASET_DIR = os.path.join(ROOT_DIR, "sashimi")
 
-MODEL_URL = "https://github.com/ShawnTylerSchwartz/fish-segmentation/releases/download/V1.0/fish_segmentation_model_schwartz_v1.h5"
+MODEL_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/V1.0/fish_segmentation_model_schwartz_v1.h5"
 TRAIN_ZIP_FILE = "train.zip"
 VAL_ZIP_FILE = "val.zip"
-TRAIN_ZIP_PATH = os.path.join(ROOT_DIR, "fishseg")
-VAL_ZIP_PATH = os.path.join(ROOT_DIR, "fishseg")
+TRAIN_ZIP_PATH = os.path.join(ROOT_DIR, "sashimi")
+VAL_ZIP_PATH = os.path.join(ROOT_DIR, "sashimi")
 
 def welcome_message():
-    print("Fish Segmentation [Version 1.0] built by Shawn T. Schwartz (2019) at Alfaro Lab, UCLA.")
+    print("sashimi [Version 1.0.0] built by Shawn T. Schwartz (2019) at Alfaro Lab, UCLA.")
     print("Contact: shawnschwartz@ucla.edu")
     print("Website: https://shawntylerschwartz.com")
     print("Github: @ShawnTylerSchwartz")
@@ -87,10 +88,10 @@ def config_setup():
     return config, dataset
 
 def download_model(URL, destination):
-    print("Downloading fish segmentation model to",destination,"...")
+    print("Downloading demo fish segmentation model to",destination,"...")
     with urllib.request.urlopen(URL) as resp, open(destination, 'wb') as out:
         shutil.copyfileobj(resp, out)
-    print("Fish segmentation model successfully downloaded!")
+    print("Demo fish segmentation model successfully downloaded!")
 
 def unpack_zip(path, file):
     print("Unpacking asset at: ",path,"/",file,sep="")
@@ -103,7 +104,7 @@ def get_fishes(dir):
     return [f for f in os.listdir(dir) if any(f.endswith(ext) for ext in desired_exts)]
 
 def get_fish_img(fish_file):
-    print("Loading Fish File: ", fish_file)
+    print("Loading Image File: ", fish_file)
     return skimage.io.imread(os.path.join(ROOT_DIR, args.input, fish_file))
 
 def detect_mask(model, fish_img):
@@ -155,7 +156,7 @@ def alpha_composite(src, dst, fish_name):
     np.clip(out,0,255)
     out = out.astype('uint8')
     save_fish(out, fish_name)
-    print("Color filled fish successfully generated!")
+    print("Color-filled image successfully generated!")
 
 def fill_bg(fish_img, mask, fish_name, r, g, b):
     red = int(r * 255)
@@ -185,13 +186,13 @@ def make_silhouette(fish_img, mask, fish_name):
     g[a == 255] = 0
     b[a == 255] = 0
     silhouette_fish = np.dstack([r, g, b, a])
-    print("Silhouette fish successfully generated!")
+    print("Silhouette image successfully generated!")
     save_fish(silhouette_fish, fish_name)
 
 def save_fish(fish_img, fish_name):
     bg_removed_img = Image.fromarray(fish_img, 'RGBA')
     bg_removed_img.save((os.path.join(ROOT_DIR, args.output, fish_name+".png")), "PNG")
-    print("Successfully saved as ===> ",fish_name,".png  in  /",args.output,"\n",sep="")
+    print("Output image successfully saved as ===> ",fish_name,".png  in  /",args.output,"\n",sep="")
 
 def execute_fish_image_processing(model, fish_set):
     if not os.path.exists(os.path.join(ROOT_DIR, "logs")):
@@ -245,29 +246,29 @@ def sum_time(elapsed_times):
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(description='Remove backgrounds from fish images.')
-    parser.add_argument('--input', '-i', required=True, metavar="/input/path/to/fish/images", help='Directory of fish images to remove backgrounds from')
-    parser.add_argument('--output', '-o', required=True, metavar="/output/path/for/background-removed/fish/images", help='Directory to place background-removed fish images in')
+    parser = argparse.ArgumentParser(description='Remove backgrounds from organismal images.')
+    parser.add_argument('--input', '-i', required=True, metavar="/input/path/to/organismal/images", help='Directory of organismal images to remove backgrounds from')
+    parser.add_argument('--output', '-o', required=True, metavar="/output/path/for/background-removed/organismal/images", help='Directory to place background-removed organismal images in')
     parser.add_argument('--red', '-r', required=False, type=float, metavar="0", help='(r)ed intensity values (0 to 1) for colordistance background mask')
     parser.add_argument('--green', '-g', required=False, type=float, metavar="0.4", help='(g)reen intensity values (0 to 1) for colordistance background mask')
     parser.add_argument('--blue', '-b', required=False, type=float, metavar="0", help='(b)lue intensity values (0 to 1) for colordistance background mask')
-    parser.add_argument('--silhouette', '-s', required=False, type=int, metavar="1", help='set to 1 (true) to make a silhouette of the segmented fish image')
-    parser.add_argument('--segmentation', '-z', required=False, type=int, metavar="0", help='set to 0 (false) to fill backgrounds of previously segmented fish images with desired background colors')
+    parser.add_argument('--silhouette', '-s', required=False, type=int, metavar="1", help='set to 1 (true) to make a silhouette of the segmented organismal image')
+    parser.add_argument('--segmentation', '-z', required=False, type=int, metavar="0", help='set to 0 (false) to fill backgrounds of previously segmented organismal images with desired background colors')
 
     args = parser.parse_args()
 
     assert args.input and args.output,\
-        "Arguments --input and --output are required to remove backgrounds of fish images"
+        "Arguments --input and --output are required to remove backgrounds of organismal images"
 
-    print("Input Directory for Fish Images: ", args.input)
-    print("Output Location for Background-Removed Fish Images: ", args.output)
+    print("Input Directory for Organismal Images: ", args.input)
+    print("Output Location for Background-Removed Organismal Images: ", args.output)
 
 #unpack
 if not os.path.exists(WEIGHTS_PATH):
     download_model(MODEL_URL, WEIGHTS_PATH)
-if not os.path.exists(os.path.join(ROOT_DIR, "fishseg", "train")):
+if not os.path.exists(os.path.join(ROOT_DIR, "sashimi", "train")):
     unpack_zip(TRAIN_ZIP_PATH, TRAIN_ZIP_FILE)
-if not os.path.exists(os.path.join(ROOT_DIR, "fishseg", "val")):
+if not os.path.exists(os.path.join(ROOT_DIR, "sashimi", "val")):
     unpack_zip(VAL_ZIP_PATH, VAL_ZIP_FILE)
 
 config, dataset = config_setup()
@@ -276,9 +277,9 @@ welcome_message()
 welcome_fish()
 
 model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
-print("Loading fish segmentation model: ", WEIGHTS_PATH)
+print("Loading demo fish segmentation model: ", WEIGHTS_PATH)
 model.load_weights(WEIGHTS_PATH, by_name=True)
-print("Fish segmentation model successfully loaded from: ", WEIGHTS_PATH, "\n")
+print("Demo fish segmentation model successfully loaded from: ", WEIGHTS_PATH, "\n")
 
 fish_files = get_fishes(args.input)
 if len(fish_files) < 1:
