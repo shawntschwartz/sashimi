@@ -30,7 +30,7 @@ MODEL_DIR = os.path.join(ROOT_DIR, "models", "segmentation_models")
 WEIGHTS_PATH = os.path.join(ROOT_DIR, MODEL_DIR, "fish_segmentation_model_schwartz_v1.h5")
 DATASET_DIR = os.path.join(ROOT_DIR, "sashimi")
 
-MODEL_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/V1.0/fish_segmentation_model_schwartz_v1.h5"
+MODEL_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/v1.0.0/fish_segmentation_model_schwartz_v1.h5"
 TRAIN_ZIP_FILE = "train.zip"
 VAL_ZIP_FILE = "val.zip"
 TRAIN_ZIP_PATH = os.path.join(ROOT_DIR, "sashimi")
