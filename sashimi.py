@@ -3,6 +3,7 @@
 # sashimi Version 1.0.0
 # Created by Shawn Schwartz 11/07/2019
 # <shawnschwartz@ucla.edu>
+# Alfaro Lab UCLA
 
 version = "sashimi"
 build = "v1.0.0 - 20191231"
