@@ -177,18 +177,6 @@ def fill_bg_only(fish_img, fish_name, r, g, b):
     filled_bg_img = Image.new('RGBA', size = fish_img.size, color = (red, green, blue, 255))
     alpha_composite(fish_img, filled_bg_img, fish_name)
 
-def make_silhouette(fish_img, mask, fish_name):
-    height, width = fish_img.shape[:2]
-    alpha_fish = np.dstack((fish_img, np.zeros((height, width), dtype=np.uint8)+255))
-    alpha_fish[:,:,3] = alpha_fish[:,:,3] * mask[:,:,0]
-    r, g, b, a = np.rollaxis(alpha_fish, axis = -1)
-    r[a == 255] = 0
-    g[a == 255] = 0
-    b[a == 255] = 0
-    silhouette_fish = np.dstack([r, g, b, a])
-    print("Silhouette image successfully generated!")
-    save_fish(silhouette_fish, fish_name)
-
 def save_fish(fish_img, fish_name):
     bg_removed_img = Image.fromarray(fish_img, 'RGBA')
     bg_removed_img.save((os.path.join(ROOT_DIR, args.output, fish_name+".png")), "PNG")
@@ -220,8 +208,6 @@ def execute_fish_image_processing(model, fish_set):
             fill_bg(tmp_masked_image, tmp_mask, mod_filename, args.red, args.green, args.blue)
         elif((args.red is not None and args.green is not None and args.blue is not None) and (args.segmentation == 0)):
             fill_bg_only(loaded_fish, mod_filename, args.red, args.green, args.blue)
-        elif(args.silhouette == 1):
-            make_silhouette(tmp_masked_image, tmp_mask, mod_filename)
         else:
             remove_bg(tmp_masked_image, tmp_mask, mod_filename)
         end = datetime.datetime.now()
@@ -253,7 +239,6 @@ if __name__ == '__main__':
     parser.add_argument('--red', '-r', required=False, type=float, metavar="0", help='(r)ed intensity values (0 to 1) for colordistance background mask')
     parser.add_argument('--green', '-g', required=False, type=float, metavar="0.4", help='(g)reen intensity values (0 to 1) for colordistance background mask')
     parser.add_argument('--blue', '-b', required=False, type=float, metavar="0", help='(b)lue intensity values (0 to 1) for colordistance background mask')
-    parser.add_argument('--silhouette', '-s', required=False, type=int, metavar="1", help='set to 1 (true) to make a silhouette of the segmented organismal image')
     parser.add_argument('--segmentation', '-z', required=False, type=int, metavar="0", help='set to 0 (false) to fill backgrounds of previously segmented organismal images with desired background colors')
     parser.add_argument('--model', '-m', required=False, metavar="/path/to/trained/model", help='Path to custom trained model (.h5 extension)')
 
