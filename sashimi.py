@@ -16,7 +16,7 @@ import urllib.request
 import shutil
 from zipfile import ZipFile
 from PIL import Image
-from fishseg import core
+from sashimi import core
 from mrcnn import utils
 from mrcnn import visualize
 from mrcnn.visualize import display_images
