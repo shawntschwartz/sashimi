@@ -14,6 +14,23 @@ $ git clone https://github.com/ShawnTylerSchwartz/sashimi.git
 Specific installation instructions and requirements, as well as instructions to execute our module, are outlined in our GitHub repository’s [requirements.txt](requirements.txt) file. At this release, users should ensure that they have **Python (Version > 3.4)** installed on their system.
 
 ## Requirements
+Users should have the following requirements installed:
+```
+// Available in 'requirements.txt'
+numpy==1.18.0
+scipy==1.4.1
+Pillow==6.2.1
+Cython==0.29.14
+matplotlib==3.1.2
+scikit-image==0.16.2
+tensorflow==1.4.0
+keras==2.1.5
+opencv-python==4.1.2.30
+h5py==2.10.0
+imgaug==0.3.0
+IPython[all]
+```
+
 We highly recommend using a virtual environment to run this program. Here is an example:
 ```
 # Install virtualenv if not already installed
