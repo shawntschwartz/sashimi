@@ -3,7 +3,7 @@
 # Created by Shawn Schwartz 11/07/2019
 # <shawnschwartz@ucla.edu>
 #
-# fishseg ~> core.py
+# sashimi ~> core.py
 #
 # Adapted from Mask R-CNN by @matterport on Github
 # https://github.com/matterport/Mask_RCNN
@@ -24,23 +24,23 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(ROOT_DIR)
 print("Initializing Setup...Please wait...")
 
-COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5") #download file from specified URL in sashimi GitHub README.md
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 
-class FishSegConfig(Config):
-    NAME = "fish"
-    IMAGES_PER_GPU = 1
-    NUM_CLASSES = 1 + 1
-    STEPS_PER_EPOCH = 100
+class sashimiConfig(Config):
+    NAME = "fish" #update with name of organism you'd like to train a model for
+    IMAGES_PER_GPU = 1 #keep at 1 if you have 1 GPU
+    NUM_CLASSES = 1 + 1 
+    STEPS_PER_EPOCH = 100 #can change to suite your image processing hardware setup
     DETECTION_MIN_CONFIDENCE = 0.9
 
-class FishSegDataset(utils.Dataset):
+class sashimiDataset(utils.Dataset):
     def load_custom(self, dataset_dir, subset):
-        self.add_class("fish", 1, "fish")
+        self.add_class(NAME, 1, NAME)
 
         assert subset in ["train", "val"]
         dataset_dir = os.path.join(dataset_dir, subset)
-        annotations1 = json.load(open(os.path.join(dataset_dir, "_fish-segmentation-regions.json")))
+        annotations1 = json.load(open(os.path.join(dataset_dir, "_fish-segmentation-regions.json"))) #modify JSON file path with your generated file from the sashimi web-interface instructions
         annotations = list(annotations1.values())
         annotations = [a for a in annotations if a['regions']]
 
@@ -51,11 +51,11 @@ class FishSegDataset(utils.Dataset):
             image = skimage.io.imread(image_path)
             height, width = image.shape[:2]
 
-            self.add_image("fish", image_id=a['filename'], path=image_path, width=width, height=height, polygons=polygons)
+            self.add_image(NAME, image_id=a['filename'], path=image_path, width=width, height=height, polygons=polygons)
         
     def load_mask(self, image_id):
         image_info = self.image_info[image_id]
-        if image_info["source"] != "fish":
+        if image_info["source"] != NAME:
             return super(self.__class__, self).load_mask(image_id)
         
         info = self.image_info[image_id]
@@ -70,29 +70,29 @@ class FishSegDataset(utils.Dataset):
     
     def image_reference(self, image_id):
         info = self.image_info[image_id]
-        if info["source"] == "fish":
+        if info["source"] == NAME:
             return info["path"]
         else:
             super(self.__class__, self).image_reference(image_id)
 
 def train(model):
-    dataset_train = FishSegDataset()
+    dataset_train = sashimiDataset()
     dataset_train.load_custom(args.dataset, "train")
     dataset_train.prepare()
 
-    dataset_val = FishSegDataset()
+    dataset_val = sashimiDataset()
     dataset_val.load_custom(args.dataset, "val")
     dataset_val.prepare()
 
     print("Training network heads")
-    model.train(dataset_train, dataset_val, learning_rate=config.LEARNING_RATE, epochs=10, layers='heads')
+    model.train(dataset_train, dataset_val, learning_rate=config.LEARNING_RATE, epochs=10, layers='heads') #can modify number of epochs if desired
 
 #TRAINING
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Train Mask R-CNN to detect custom class.')
-    parser.add_argument("command", metavar="<command>", help="'train' or 'splash'")
+    parser.add_argument("command", metavar="<command>", help="'train'")
     parser.add_argument('--dataset', required=False, metavar="/path/to/custom/dataset", help='Directory of the custom dataset')
     parser.add_argument('--weights', required=True, metavar="/path/to/weights.h5", help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--logs', required=False, default=DEFAULT_LOGS_DIR, metavar="/path/to/logs/", help='Logs and checkpoints directory (default=logs/)')
@@ -106,11 +106,11 @@ if __name__ == '__main__':
     print("Logs: ", args.logs)
 
     if args.command == "train":
-        config = FishSegConfig()
+        config = sashimiConfig()
     else:
-        class InferenceConfig(FishSegConfig):
-            GPU_COUNT = 1
-            IMAGES_PER_GPU = 1
+        class InferenceConfig(sashimiConfig):
+            GPU_COUNT = 1 #keep at 1 if you have 1 GPU
+            IMAGES_PER_GPU = 1 #keep at 1 if you have 1 GPU
         config = InferenceConfig()
     config.display()
 

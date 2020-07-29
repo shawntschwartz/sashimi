@@ -73,7 +73,7 @@ def exit_fish():
     """)
 
 def config_setup():
-    config = core.FishSegConfig()
+    config = core.sashimiConfig()
 
     class InferenceConfig(config.__class__):
         GPU_COUNT = 1
@@ -82,7 +82,7 @@ def config_setup():
     config = InferenceConfig()
     config.display()
 
-    dataset = core.FishSegDataset()
+    dataset = core.sashimiDataset()
     dataset.load_custom(DATASET_DIR, "val")
     dataset.prepare()
 

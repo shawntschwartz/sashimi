@@ -106,3 +106,11 @@ $ python3 sashimi.py --input=fish_images --output=fish_images_output --model=pat
 ![Example Segmented Fish](readme-examples/Epibulus_insidiator.png)
 
 (_Epibulus insidiator_)
+
+## Training a new model
+1. Download COCO weights here: [https://github.com/ShawnTylerSchwartz/sashimi/releases/download/v1.0.0/mask_rcnn_coco.h5](https://github.com/ShawnTylerSchwartz/sashimi/releases/download/v1.0.0/mask_rcnn_coco.h5)
+2. Have training data set ready (`train/` and `val/` directories within the `sashimi` Python module directory, each containing the train/val images and `.json` files with training set coordinates generated via instructions on the _sashimi web-interface_, respectively)
+3. Run the `core.py` script within the `sashimi` Python module directory using the `train/`, `val/`, and _coco weights_ you downloaded in `Step 1`.
+```
+$ python3 core.py train --dataset=/path/to/dir/containing/both/train+val_dirs/ --model=/path/to/mask_rcnn_coco.h5
+```
