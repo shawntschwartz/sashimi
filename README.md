@@ -17,18 +17,17 @@ Specific installation instructions and requirements, as well as instructions to 
 Users should have the following requirements installed:
 ```
 // Available in 'requirements.txt'
-numpy==1.18.0
-scipy==1.4.1
-Pillow==6.2.1
-Cython==0.29.14
-matplotlib==3.1.2
-scikit-image==0.16.2
-tensorflow==1.4.0
-keras==2.1.5
-opencv-python==4.1.2.30
+numpy==1.17.2
+scipy==1.3.1
+Pillow==6.2.0
+Cython==0.29.13
+matplotlib==3.1.1
+scikit-image==0.15.0
+tensorflow==1.15.0
+keras==2.1.2
+opencv-python==4.4.0.42
 h5py==2.10.0
-imgaug==0.3.0
-IPython[all]
+ipython==7.8.0
 ```
 
 We highly recommend using a virtual environment to run this program. Here is an example:
