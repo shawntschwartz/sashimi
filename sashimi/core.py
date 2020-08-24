@@ -36,7 +36,7 @@ class sashimiConfig(Config):
 
 class sashimiDataset(utils.Dataset):
     def load_custom(self, dataset_dir, subset):
-        self.add_class(NAME, 1, NAME)
+        self.add_class(sashimiConfig.NAME, 1, sashimiConfig.NAME)
 
         assert subset in ["train", "val"]
         dataset_dir = os.path.join(dataset_dir, subset)
@@ -51,11 +51,11 @@ class sashimiDataset(utils.Dataset):
             image = skimage.io.imread(image_path)
             height, width = image.shape[:2]
 
-            self.add_image(NAME, image_id=a['filename'], path=image_path, width=width, height=height, polygons=polygons)
+            self.add_image(sashimiConfig.NAME, image_id=a['filename'], path=image_path, width=width, height=height, polygons=polygons)
         
     def load_mask(self, image_id):
         image_info = self.image_info[image_id]
-        if image_info["source"] != NAME:
+        if image_info["source"] != sashimiConfig.NAME:
             return super(self.__class__, self).load_mask(image_id)
         
         info = self.image_info[image_id]
@@ -70,7 +70,7 @@ class sashimiDataset(utils.Dataset):
     
     def image_reference(self, image_id):
         info = self.image_info[image_id]
-        if info["source"] == NAME:
+        if info["source"] == sashimiConfig.NAME:
             return info["path"]
         else:
             super(self.__class__, self).image_reference(image_id)
