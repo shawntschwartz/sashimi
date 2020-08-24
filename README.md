@@ -7,7 +7,7 @@ We present a software module written in *Python* (Version 3.6.5) that is accessi
 *To view the __fish segmentation analyses_ files, please visit: [https://github.com/ShawnTylerSchwartz/fish-segmentation-analyses](https://github.com/ShawnTylerSchwartz/fish-segmentation-analyses).*
 
 To get started, clone the repository:
-```
+```shell
 $ git clone https://github.com/ShawnTylerSchwartz/sashimi.git
 ```
 
@@ -31,24 +31,24 @@ ipython==7.8.0
 ```
 
 We highly recommend using a virtual environment to run this program. Here is an example:
-```
+```shell
 # Install virtualenv if not already installed
 $ pip install virtualenv
 ```
-```
+```shell
 # Create an environment
 # (you can create this file in an "envs" directory in your development directory)
 $ virtualenv sashimi_env
 ```
-```
+```shell
 # Activate the environment
 $ source pathtoenvs/sashimi_env/bin/activate
 ```
-```
+```shell
 # Install necessary requirements
 $ pip install -r requirements.txt
 ```
-```
+```shell
 # Deactivate environment when no longer using the sashimi program
 $ deactivate
 ```
@@ -59,7 +59,7 @@ Users can specify the input directory of organismal images via the *--input* fla
 It is recommended to place the input directory of images inside the cloned sashimi repository on your machine.
 
 Here is a default call of the pipeline:
-```
+```shell
 $ python3 sashimi.py --input=fish_images --output=fish_images_output
 ```
 
@@ -78,7 +78,7 @@ There are a variety of arguments that can be specified for more custom use cases
 Below are example calls to the command line for various examples:
 
 *Color background pixels of previously segmented .png file green*
-```
+```shell
 $ python3 sashimi.py --input=fish_images --output=fish_images_output --segmentation=0 --red=0.0 --green=1.0 --blue=0.0
 ```
 **Example of output image from previously specified directory:**
@@ -89,7 +89,7 @@ $ python3 sashimi.py --input=fish_images --output=fish_images_output --segmentat
 ---
 
 *Color background pixels of previously segmented .png file blue*
-```
+```shell
 $ python3 sashimi.py --input=bird_images --output=bird_images_output --segmentation=0 --red=0.0 --green=0.0 --blue=1.0
 ```
 **Example of output image from previously specified directory:**
@@ -98,7 +98,7 @@ $ python3 sashimi.py --input=bird_images --output=bird_images_output --segmentat
 (_Tangara abbas_)
 
 *Segment images of taxonomic group with custom model*
-```
+```shell
 $ python3 sashimi.py --input=fish_images --output=fish_images_output --model=path/to/custom/model.h5
 ```
 **Example of output image from previously specified directory:**
@@ -110,6 +110,6 @@ $ python3 sashimi.py --input=fish_images --output=fish_images_output --model=pat
 1. Download COCO weights here: [https://github.com/ShawnTylerSchwartz/sashimi/releases/download/v1.0.0/mask_rcnn_coco.h5](https://github.com/ShawnTylerSchwartz/sashimi/releases/download/v1.0.0/mask_rcnn_coco.h5)
 2. Have training data set ready (`train/` and `val/` directories within the `sashimi` Python module directory, each containing the train/val images and `.json` files with training set coordinates generated via instructions on the _sashimi web-interface_, respectively)
 3. Run the `core.py` script within the `sashimi` Python module directory using the `train/`, `val/`, and _coco weights_ you downloaded in `Step 1`.
-```
+```shell
 $ python3 core.py train --dataset=/path/to/dir/containing/both/train+val_dirs/ --model=/path/to/mask_rcnn_coco.h5
 ```
