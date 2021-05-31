@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
-# sashimi Version 1.0.0
-# Created by Shawn Schwartz 11/07/2019
-# <shawnschwartz@ucla.edu>
-# Alfaro Lab UCLA
+'''
+Sashimi: A toolkit for faciliating high-throughput 
+organismal image segmentation using deep learning
+=========================================================
 
-version = "sashimi"
-build = "v1.0.0 - 20191231"
+Authors: Shawn T. Schwartz & Michael E. Alfaro
+Email: shawnschwartz@ucla.edu
+Homepage: https://shawnschwartz.com
+'''
 
 import os
 import sys
@@ -15,9 +17,10 @@ import numpy as np
 import datetime
 import urllib.request
 import shutil
-from zipfile import ZipFile
+import json
 from PIL import Image
 from sashimi import core
+from sashimi.pycocotools import coco
 from mrcnn import utils
 from mrcnn import visualize
 from mrcnn.visualize import display_images
@@ -26,22 +29,22 @@ from mrcnn.model import log
 import warnings
 warnings.filterwarnings("ignore")
 
+# paths
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(ROOT_DIR, "models", "segmentation_models")
-WEIGHTS_PATH = os.path.join(ROOT_DIR, MODEL_DIR, "fish_segmentation_model_schwartz_v1.h5")
-DATASET_DIR = os.path.join(ROOT_DIR, "sashimi")
+MODEL_DIR = os.path.join(ROOT_DIR, "_models")
+COCO_WEIGHTS = os.path.join(MODEL_DIR, "mask_rcnn_coco.h5")
 
-MODEL_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/v1.0.0/fish_segmentation_model_schwartz_v1.h5"
-TRAIN_ZIP_FILE = "train.zip"
-VAL_ZIP_FILE = "val.zip"
-TRAIN_ZIP_PATH = os.path.join(ROOT_DIR, "sashimi")
-VAL_ZIP_PATH = os.path.join(ROOT_DIR, "sashimi")
+# default fish model url
+MODEL_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/V1.0.0/fish_segmentation_model_schwartz_v1-0-0.h5"
+COCO_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/V1.0.0/mask_rcnn_coco.h5"
 
+# Define functions
 def welcome_message():
-    print("sashimi [Version 1.0.0] built by Shawn T. Schwartz (2019) at Alfaro Lab, UCLA.")
+    print("\n\nSashimi [Version 1.0.0] built by Shawn T. Schwartz at Alfaro Lab, UCLA.")
     print("Contact: shawnschwartz@ucla.edu")
-    print("Website: https://shawntylerschwartz.com")
+    print("Website: https://shawnschwartz.com")
     print("Github: @ShawnTylerSchwartz")
+    print("Twitter: @shawnschwartz_")
 
 def welcome_fish():
     print("""   
@@ -72,70 +75,67 @@ def exit_fish():
      `\\´´\¸.·´
     """)
 
-def config_setup():
-    config = core.sashimiConfig()
-
-    class InferenceConfig(config.__class__):
-        GPU_COUNT = 1
-        IMAGES_PER_GPU = 1
-    
-    config = InferenceConfig()
-    config.display()
-
-    dataset = core.sashimiDataset()
-    dataset.load_custom(DATASET_DIR, "val")
-    dataset.prepare()
-
-    return config, dataset
-
 def download_model(URL, destination):
-    print("Downloading demo fish segmentation model to",destination,"...")
+    print("Downloading default fish segmentation model to", destination, "...")
     with urllib.request.urlopen(URL) as resp, open(destination, 'wb') as out:
         shutil.copyfileobj(resp, out)
-    print("Demo fish segmentation model successfully downloaded!")
+    print("Default fish segmentation model successfully downloaded to models/.")
 
-def unpack_zip(path, file):
-    print("Unpacking asset at: ",path,"/",file,sep="")
-    zip = ZipFile(os.path.join(path, file))
-    zip.extractall(path)
-    zip.close()
-
-def get_fishes(dir):
+def get_images(dir):
     desired_exts = ['jpg', 'jpeg', 'png']
     return [f for f in os.listdir(dir) if any(f.endswith(ext) for ext in desired_exts)]
 
-def get_fish_img(fish_file):
-    print("Loading Image File: ", fish_file)
-    return skimage.io.imread(os.path.join(ROOT_DIR, args.input, fish_file))
+def load_img(path):
+    print("Reading organism: ", path)
+    return skimage.io.imread(os.path.join(ROOT_DIR, args.input, path))
 
-def detect_mask(model, fish_img):
-    return model.detect([fish_img], verbose=0)
+def detect_mask(model, img):
+    return model.detect([img], verbose=0)
 
-def draw_mask(fish_img, mask):
+def draw_mask(img, mask):
     tmp_result = mask[0]
-    tmp_mask = tmp_result['masks']
+
+    if(len(tmp_result['scores']) > 1):
+        print("Detected > 1 target... selecting most prominent target.")
+        tmp_mask = tmp_result['masks']
+        #print(tmp_mask.shape)
+    else:
+        print("Detected 1 target.")
+        tmp_mask = tmp_result['masks']
+        #print(tmp_mask.shape)
+
     tmp_mask = tmp_mask.astype(int)
-    for ii in range(tmp_mask.shape[2]):
-        tmp_img_mtrx_mask = fish_img
-        for jj in range(tmp_img_mtrx_mask.shape[2]):
-            tmp_img_mtrx_mask[:,:,jj] = tmp_img_mtrx_mask[:,:,jj] * tmp_mask[:,:,ii]
+    tmp_img_mtrx_mask = img
+
+    if(tmp_mask.shape[2] > 0):
+        for ii in range(tmp_img_mtrx_mask.shape[2]):
+            tmp_img_mtrx_mask[:,:,ii] = tmp_img_mtrx_mask[:,:,ii] * tmp_mask[:,:,0]
+    else:
+        print("Could not draw reliable mask... skipping.")
+        return "NULL", "NULL"
+        
     return tmp_img_mtrx_mask, tmp_mask
 
-def remove_bg(fish_img, mask, fish_name):
-    height, width = fish_img.shape[:2]
-    alpha_fish = np.dstack((fish_img, np.zeros((height, width), dtype=np.uint8)+255))
-    alpha_fish[:,:,3] = alpha_fish[:,:,3] * mask[:,:,0]
+def remove_bg(img, mask, path):
+    height, width = img.shape[:2]
+    alpha_img = np.dstack((img, np.zeros((height, width), dtype=np.uint8)+255))
+    alpha_img[:,:,3] = alpha_img[:,:,3] * mask[:,:,0]
     print("Background successfully removed!")
-    save_fish(alpha_fish, fish_name)
+    save_image(alpha_img, path)
 
-def alpha_composite(src, dst, fish_name):
+def save_image(img, path):
+    bg_removed_img = Image.fromarray(img, 'RGBA')
+    bg_removed_img.save((os.path.join(ROOT_DIR, args.output, path+".png")), "PNG")
+    print("Successfully saved as ===> ",path,".png  in  /",args.output,"\n",sep="")
+
+def alpha_composite(src, dst, path):
     '''
     Return the alpha composite of src and dst.
 
     Parameters:
     src -- PIL RGBA Image object
     dst -- PIL RGBA Image object
-    fish_name -- Name of Fish File
+    path -- Name of Organism File
 
     The algorithm comes from http://en.wikipedia.org/wiki/Alpha_compositing
     '''
@@ -156,66 +156,86 @@ def alpha_composite(src, dst, fish_name):
     out[alpha] *= 255
     np.clip(out,0,255)
     out = out.astype('uint8')
-    save_fish(out, fish_name)
-    print("Color-filled image successfully generated!")
+    save_image(out, path)
+    print("Color filled organism successfully generated!")
 
-def fill_bg(fish_img, mask, fish_name, r, g, b):
+def fill_bg(img, mask, path, r, g, b):
     red = int(r * 255)
     green = int(g * 255)
     blue = int(b * 255)
-    height, width = fish_img.shape[:2]
-    alpha_fish = np.dstack((fish_img, np.zeros((height, width), dtype=np.uint8)+255))
-    alpha_fish[:,:,3] = alpha_fish[:,:,3] * mask[:,:,0]
-    alpha_fish_img = Image.fromarray(alpha_fish, 'RGBA')
-    filled_bg_img = Image.new('RGBA', size = alpha_fish_img.size, color = (red, green, blue, 255))
-    alpha_composite(alpha_fish_img, filled_bg_img, fish_name)
+    height, width = img.shape[:2]
+    alpha_img = np.dstack((img, np.zeros((height, width), dtype=np.uint8)+255))
+    alpha_img[:,:,3] = alpha_img[:,:,3] * mask[:,:,0]
+    alpha_img_img = Image.fromarray(alpha_img, 'RGBA')
+    filled_bg_img = Image.new('RGBA', size = alpha_img_img.size, color = (red, green, blue, 255))
+    alpha_composite(alpha_img_img, filled_bg_img, path)
 
-def fill_bg_only(fish_img, fish_name, r, g, b):
+def fill_bg_only(img, path, r, g, b):
     red = int(r * 255)
     green = int(g * 255)
     blue = int(b * 255)
-    fish_img = Image.fromarray(fish_img, 'RGBA')
-    filled_bg_img = Image.new('RGBA', size = fish_img.size, color = (red, green, blue, 255))
-    alpha_composite(fish_img, filled_bg_img, fish_name)
+    img = Image.fromarray(img, 'RGBA')
+    filled_bg_img = Image.new('RGBA', size = img.size, color = (red, green, blue, 255))
+    alpha_composite(img, filled_bg_img, path)
 
-def save_fish(fish_img, fish_name):
-    bg_removed_img = Image.fromarray(fish_img, 'RGBA')
-    bg_removed_img.save((os.path.join(ROOT_DIR, args.output, fish_name+".png")), "PNG")
-    print("Output image successfully saved as ===> ",fish_name,".png  in  /",args.output,"\n",sep="")
+def make_silhouette(img, mask, path):
+    height, width = img.shape[:2]
+    alpha_img = np.dstack((img, np.zeros((height, width), dtype=np.uint8)+255))
+    alpha_img[:,:,3] = alpha_img[:,:,3] * mask[:,:,0]
+    r, g, b, a = np.rollaxis(alpha_img, axis = -1)
+    r[a == 255] = 0
+    g[a == 255] = 0
+    b[a == 255] = 0
+    silhouette = np.dstack([r, g, b, a])
+    print("Silhouette of organism successfully generated!")
+    save_image(silhouette, path)
 
-def execute_fish_image_processing(model, fish_set):
-    if not os.path.exists(os.path.join(ROOT_DIR, "logs")):
-        os.mkdir(os.path.join(ROOT_DIR, "logs"))
+def execute_image_processing(model, image_set):
+    if not os.path.exists(os.path.join(ROOT_DIR, "_logs")):
+        os.mkdir(os.path.join(ROOT_DIR, "_logs"))
     if not os.path.exists(os.path.join(ROOT_DIR, args.output)):
         os.mkdir(os.path.join(ROOT_DIR, args.output))
+    if not os.path.exists(os.path.join(ROOT_DIR, "_logs", "eval_mask_json_"+args.organism)):
+        os.mkdir(os.path.join(ROOT_DIR, "_logs", "eval_mask_json_"+args.organism))
+
     elapsed_times = []
     bgremoved_filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + '_segmentation.csv'
-    bgremoved_log_file = open(os.path.join(ROOT_DIR, "logs", bgremoved_filename), 'w')
-    for counter, fish in enumerate(fish_set, start=1):
+    bgremoved_log_file = open(os.path.join(ROOT_DIR, "_logs", bgremoved_filename), 'w')
+    for counter, organism in enumerate(image_set, start=1):
         start = datetime.datetime.now()
         if((args.segmentation is None) or (args.segmentation == 1)):
-            loaded_fish = get_fish_img(fish)
-            print("Segmenting (",counter,"/",len(fish_set),"): ",fish,sep="")
-            fish_detection_result = detect_mask(model, loaded_fish)
-            tmp_masked_image, tmp_mask = draw_mask(loaded_fish, fish_detection_result)
+            loaded_organism = load_img(organism)
+            print("Segmenting (",counter,"/",len(image_set),"): ",organism,sep="")
+            organism_detection_result = detect_mask(model, loaded_organism)
+            tmp_masked_image, tmp_mask = draw_mask(loaded_organism, organism_detection_result)
+
+            if((tmp_masked_image == "NULL") & (tmp_mask == "NULL")):
+                continue
         else:
-            #loaded_fish = Image.open(fish).convert('RGBA')
-            loaded_fish = get_fish_img(fish)
-            print("Filling background of (",counter,"/",len(fish_set),"): ",fish,sep="")
-        mod_filename = fish.split('.')
-        mod_filename = mod_filename[0]
-        #check if color args are passed
+            loaded_organism = load_img(organism)
+            print("Filling background of (",counter,"/",len(image_set),"): ",organism,sep="")
+        
+        mod_filename = os.path.splitext(organism)[0]
+        
+        # check if color args are passed
         if((args.red is not None and args.green is not None and args.blue is not None) and (args.segmentation == 1 or args.segmentation is None)):
             fill_bg(tmp_masked_image, tmp_mask, mod_filename, args.red, args.green, args.blue)
         elif((args.red is not None and args.green is not None and args.blue is not None) and (args.segmentation == 0)):
-            fill_bg_only(loaded_fish, mod_filename, args.red, args.green, args.blue)
+            fill_bg_only(loaded_organism, mod_filename, args.red, args.green, args.blue)
+        elif(args.silhouette == 1 and (args.segmentation is None or args.segmentation == 1)):
+            make_silhouette(tmp_masked_image, tmp_mask, mod_filename)
         else:
             remove_bg(tmp_masked_image, tmp_mask, mod_filename)
+            mask_values_file = open(os.path.join(ROOT_DIR, "_logs", "eval_mask_json_"+args.organism, mod_filename + ".json"), 'w')
+            tmp_mask_list = tmp_mask.tolist()
+            json_str = json.dumps(tmp_mask_list)
+            mask_values_file.write(json_str)
+            mask_values_file.close()
         end = datetime.datetime.now()
         elapsed_time = end - start
         datestamp = datetime.datetime.utcnow()
         output_path = "/"+args.output
-        bgremoved_log_file.write("%s,%s,%s,%s\n" % (datestamp, fish, output_path, elapsed_time))
+        bgremoved_log_file.write("%s,%s,%s,%s\n" % (datestamp, organism, output_path, elapsed_time))
         elapsed_times.append(elapsed_time)
     bgremoved_log_file.close()
     return sum_time(elapsed_times)
@@ -230,57 +250,86 @@ def sum_time(elapsed_times):
         sum += d
     return sum
 
-# Main Run
+def config_setup(use_coco):
+    if use_coco is True:
+        config = core.CocoConfig()
+    else:
+        config = core.sashimiConfig()
+        
+    dataset = core.CocoDataset()
+
+    class InferenceConfig(config.__class__):
+        GPU_COUNT = 1
+        IMAGES_PER_GPU = 1
+        NAME = args.organism
+        REGION = args.regions
+
+    config = InferenceConfig()
+    config.display()
+
+    dataset.load_custom(DATASET_DIR, "val", args.imgsrc)
+    dataset.prepare()
+
+    print("Images: {}\nClasses: {}".format(len(dataset.image_ids), dataset.class_names))
+
+    return config, dataset
+
 if __name__ == '__main__':
     import argparse
 
-    parser = argparse.ArgumentParser(description='Remove backgrounds from organismal images.')
-    parser.add_argument('--input', '-i', required=True, metavar="/input/path/to/organismal/images", help='Directory of organismal images to remove backgrounds from')
-    parser.add_argument('--output', '-o', required=True, metavar="/output/path/for/background-removed/organismal/images", help='Directory to place background-removed organismal images in')
-    parser.add_argument('--red', '-r', required=False, type=float, metavar="0", help='(r)ed intensity values (0 to 1) for colordistance background mask')
-    parser.add_argument('--green', '-g', required=False, type=float, metavar="0.4", help='(g)reen intensity values (0 to 1) for colordistance background mask')
-    parser.add_argument('--blue', '-b', required=False, type=float, metavar="0", help='(b)lue intensity values (0 to 1) for colordistance background mask')
-    parser.add_argument('--segmentation', '-z', required=False, type=int, metavar="0", help='set to 0 (false) to fill backgrounds of previously segmented organismal images with desired background colors')
-    parser.add_argument('--model', '-m', required=False, metavar="/path/to/trained/model", help='Path to custom trained model (.h5 extension)')
-
+    parser = argparse.ArgumentParser(description='Rapidly remove backgrounds from organimal images with Mask R-CNN.')
+    parser.add_argument('--input', '-i', required=True, metavar="/input/path/to/images", help='Directory of images to remove backgrounds from')
+    parser.add_argument('--output', '-o', required=True, metavar="/output/path/for/background-removed/images", help='Directory to place background-removed images in')
+    parser.add_argument('--red', '-r', required=False, type=float, metavar="0", help='(r)ed intensity values (0 to 1) for background mask')
+    parser.add_argument('--green', '-g', required=False, type=float, metavar="0.4", help='(g)reen intensity values (0 to 1) for background mask')
+    parser.add_argument('--blue', '-b', required=False, type=float, metavar="0", help='(b)lue intensity values (0 to 1) for background mask')
+    parser.add_argument('--silhouette', '-s', required=False, type=int, metavar="1", help='set to 1 (true) to make a silhouette of the segmented image')
+    parser.add_argument('--segmentation', '-z', required=False, type=int, metavar="0", help='set to 0 (false) to fill backgrounds of previously segmented images with desired background colors')
+    parser.add_argument('--model', '-m', required=False, default=os.path.join(MODEL_DIR, "fish_segmentation_model_schwartz_v1-0-0.h5"), metavar="/path/to/custom/model.h5", help='Path to custom segmentation model to use (defaults to models/fish_segmentation_model_schwartz_v1-0-0.h5)')
+    parser.add_argument('--organism', '-n', required=False, default="fish", metavar="name of class label to detect", help="String with name of class label to detect, should match that used in training data. (Defaults to 'fish' for default fish segmentation model.) You can specify a label present in the COCO dataset along with setting --coco/-c to True to utilize the pre-trained weights in COCO.")
+    parser.add_argument('--coco', '-c', required=False, default=False, metavar="use the COCO pre-trained weights for detection instead of custom model", help="Set to True to use the default pre-trained COCO weights for object detection instead of a custom model (defaults to False).")
+    parser.add_argument('--regions', '-y', required=False, default="_fish-segmentation-regions.json", metavar="Name of manual segmentation regions file.", help="Should be placed in both train/ and val/ folders, and should have the same exact filename within each of those two folders. (Defaults to _fish-segmentation-regions.json)")
+    parser.add_argument('--imgsrc', '-j', required=False, default="url", metavar="Where are source images located ('local' or 'url')", help="Specify 'local' or 'url' depending on how paths are provided in your regions .JSON file. Important for distribution purposes. Default is URL -- images will be downloaded from source initially, and won't download again unless directory no longer exists. Use 'local' if images are stored directly in the respective train/ and val/ directories.")
+    
     args = parser.parse_args()
 
     assert args.input and args.output,\
-        "Arguments --input and --output are required to remove backgrounds of organismal images"
+        "Arguments --input and --output are required to remove backgrounds of fish images"
 
-    print("Input Directory for Organismal Images: ", args.input)
-    print("Output Location for Background-Removed Organismal Images: ", args.output)
+    print("Input Directory for Images to Segment: ", args.input)
+    print("Output Location for Background-Removed Images: ", args.output)
 
-#unpack
-if not os.path.exists(WEIGHTS_PATH) and not args.model:
-    download_model(MODEL_URL, WEIGHTS_PATH)
-if not os.path.exists(os.path.join(ROOT_DIR, "sashimi", "train")) and not args.model:
-    unpack_zip(TRAIN_ZIP_PATH, TRAIN_ZIP_FILE)
-if not os.path.exists(os.path.join(ROOT_DIR, "sashimi", "val")) and not args.model:
-    unpack_zip(VAL_ZIP_PATH, VAL_ZIP_FILE)
+    DATASET_DIR = os.path.join(ROOT_DIR, "sashimi", args.organism)
+    WEIGHTS_PATH = os.path.join(MODEL_DIR, args.model)
 
-config, dataset = config_setup()
+    if not os.path.exists(DATASET_DIR):
+        os.mkdir(DATASET_DIR)
+    if not os.path.exists(os.path.join(DATASET_DIR, "train")):
+        os.mkdir(os.path.join(DATASET_DIR, "train"))
+    if not os.path.exists(os.path.join(DATASET_DIR, "val")):
+        os.mkdir(os.path.join(DATASET_DIR, "val"))
 
-welcome_message()
-welcome_fish()
+    # download and unpack necessary data
+    if not os.path.exists(WEIGHTS_PATH):
+        download_model(MODEL_URL, WEIGHTS_PATH)
+    if not os.path.exists(COCO_WEIGHTS):
+        download_model(COCO_URL, COCO_WEIGHTS)
 
-if not args.model:
+    config, dataset = config_setup(args.coco)
+
+    welcome_message()
+    welcome_fish()
+
     model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
-    print("Loading demo fish segmentation model: ", WEIGHTS_PATH)
+    print("Loading segmentation model: ", WEIGHTS_PATH)
     model.load_weights(WEIGHTS_PATH, by_name=True)
-    print("Demo fish segmentation model successfully loaded from: ", WEIGHTS_PATH, "\n")
-else:
-    WEIGHTS_PATH = args.model
-    model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
-    print("Loading custom organismal segmentation model: ", WEIGHTS_PATH)
-    model.load_weights(WEIGHTS_PATH, by_name=True)
-    print("Custom organismal segmentation model successfully loaded from source: ", WEIGHTS_PATH, "\n")
+    print("Segmentation model successfully loaded from: ", WEIGHTS_PATH, "\n")
 
-fish_files = get_fishes(args.input)
-if len(fish_files) < 1:
-    print("No organismal image files found in specified input directory.")
+    organism_images = get_images(args.input)
+    if len(organism_images) < 1:
+        print("No image files found in specified input directory.")
 
-total_elapsed_time = execute_fish_image_processing(model, fish_files)
+    total_elapsed_time = execute_image_processing(model, organism_images)
 
-exit_fish()
-exit_message(total_elapsed_time)
+    exit_fish()
+    exit_message(total_elapsed_time)
