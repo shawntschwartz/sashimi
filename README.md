@@ -1,7 +1,9 @@
 # *Sashimi*: A toolkit for facilitating high-throughput organismal image segmentation using deep learning
 
 Shawn T. Schwartz* and Michael E. Alfaro
+
 Department of Ecology and Evolutionary Biology, University of California, Los Angeles
+
 *Correspondence concerning this article should be addressed to Shawn Schwartz, Terasaki Life Sciences Building 2153, University of California, Los Angeles, CA 90095, USA. Email: shawnschwartz@ucla.edu
 
 **APPLICATION PAPER UNDER REVIEW**
