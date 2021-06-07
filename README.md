@@ -43,11 +43,11 @@ $ pip install virtualenv
 ```bash
 # Create an environment
 # (you can create this file in an "envs" directory in your development directory)
-$ virtualenv sashimi_env
+$ venv sashimi_env
 ```
 ```bash
 # Activate the environment
-$ source pathtoenvs/sashimi_env/bin/activate
+$ python -m venv sashimi_env
 ```
 ```bash
 # Install necessary requirements
