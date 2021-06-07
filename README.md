@@ -42,12 +42,15 @@ $ pip install virtualenv
 ```
 ```bash
 # Create an environment
-# (you can create this file in an "envs" directory in your development directory)
-$ venv sashimi_env
+$ python -m venv sashimi_env
 ```
 ```bash
 # Activate the environment
-$ python -m venv sashimi_env
+## On macOS and Linux:
+$ source sashimi_env/bin/activate
+
+## On Windows:
+$  .\sashimi_env\Scripts\activate
 ```
 ```bash
 # Install necessary requirements
