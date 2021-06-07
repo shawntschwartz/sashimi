@@ -49,25 +49,27 @@ class CocoConfig(Config):
     STEPS_PER_EPOCH = 100
     DETECTION_MIN_CONFIDENCE = 0.9
 
+    REGIONS = "_fish-segmentation-regions.json"
+
 DEFAULT_DATASET_YEAR = "2014"
 
 class CocoDataset(utils.Dataset):
 
-    def load_custom(self, dataset_dir, subset, imgsrc):
-        self.add_class(sashimiConfig.NAME, 1, sashimiConfig.NAME)
+    def load_custom(self, dataset_dir, subset, organism, regions, imgsrc):
+        self.add_class(organism, 1, organism)
 
-        print("Detecting class of: ", sashimiConfig.NAME)
+        print("Detecting class of: ", organism)
 
         assert subset in ["train", "val"]
         dataset_dir = os.path.join(dataset_dir, subset)
-        annotations1 = json.load(open(os.path.join(dataset_dir, sashimiConfig.REGIONS))) #modify JSON file path with your generated file from the sashimi web-interface instructions
+        annotations1 = json.load(open(os.path.join(dataset_dir, regions))) #modify JSON file path with your generated file from the sashimi web-interface instructions
         annotations = list(annotations1.values())
         annotations = [a for a in annotations if a['regions']]
 
         if not os.path.exists(os.path.join(ROOT_DIR, "logs")):
             os.mkdir(os.path.join(ROOT_DIR, "logs"))
-        if not os.path.exists(os.path.join(ROOT_DIR, "logs", "gt_mask_json_" + sashimiConfig.NAME)):
-            os.mkdir(os.path.join(ROOT_DIR, "logs", "gt_mask_json_" + sashimiConfig.NAME))
+        if not os.path.exists(os.path.join(ROOT_DIR, "logs", "gt_mask_json_" + organism)):
+            os.mkdir(os.path.join(ROOT_DIR, "logs", "gt_mask_json_" + organism))
 
         for idx, a in enumerate(annotations):
             polygons = [r['shape_attributes'] for r in a['regions'].values()]
@@ -91,8 +93,8 @@ class CocoDataset(utils.Dataset):
             #print(image_path_mod[0])
             
             #print(ROOT_DIR)
-            if not os.path.exists(os.path.join(ROOT_DIR, "logs", "gt_mask_json_" + sashimiConfig.NAME, image_path_mod + ".json")):
-                gt_mask_values_file = open(os.path.join(ROOT_DIR, "logs", "gt_mask_json_" + sashimiConfig.NAME, image_path_mod + ".json"), 'w')
+            if not os.path.exists(os.path.join(ROOT_DIR, "logs", "gt_mask_json_" + organism, image_path_mod + ".json")):
+                gt_mask_values_file = open(os.path.join(ROOT_DIR, "logs", "gt_mask_json_" + organism, image_path_mod + ".json"), 'w')
             #gt_mask_values_file = open(image_path_mod + ".json")
                 for aa in polygons:    
                     tmp_coordinates = list(zip(aa['all_points_x'], aa['all_points_y']))
@@ -108,7 +110,7 @@ class CocoDataset(utils.Dataset):
 
             image = skimage.io.imread(image_path)
             height, width = image.shape[:2]
-            self.add_image(CocoConfig.NAME, image_id=a['filename'], path=image_path, width=width, height=height, polygons=polygons)
+            self.add_image(organism, image_id=a['filename'], path=image_path, width=width, height=height, polygons=polygons)
 
             def load_mask(self, image_id):
                 image_info = self.image_info[image_id]

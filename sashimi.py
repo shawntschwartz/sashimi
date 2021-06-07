@@ -33,10 +33,11 @@ warnings.filterwarnings("ignore")
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(ROOT_DIR, "_models")
 COCO_WEIGHTS = os.path.join(MODEL_DIR, "mask_rcnn_coco.h5")
+OUTPUT_HOME = os.path.join(ROOT_DIR, "_outputs")
 
 # default fish model url
-MODEL_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/V1.0.0/fish_segmentation_model_schwartz_v1-0-0.h5"
-COCO_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/V1.0.0/mask_rcnn_coco.h5"
+MODEL_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/v1.0.0/fish_segmentation_model_schwartz_v1-0-0.h5"
+COCO_URL = "https://github.com/ShawnTylerSchwartz/sashimi/releases/download/v1.0.0/mask_rcnn_coco.h5"
 
 # Define functions
 def welcome_message():
@@ -76,10 +77,10 @@ def exit_fish():
     """)
 
 def download_model(URL, destination):
-    print("Downloading default fish segmentation model to", destination, "...")
+    print("Downloading required model to", destination, "...")
     with urllib.request.urlopen(URL) as resp, open(destination, 'wb') as out:
         shutil.copyfileobj(resp, out)
-    print("Default fish segmentation model successfully downloaded to models/.")
+    print("Model successfully downloaded to models/.")
 
 def get_images(dir):
     desired_exts = ['jpg', 'jpeg', 'png']
@@ -125,8 +126,8 @@ def remove_bg(img, mask, path):
 
 def save_image(img, path):
     bg_removed_img = Image.fromarray(img, 'RGBA')
-    bg_removed_img.save((os.path.join(ROOT_DIR, args.output, path+".png")), "PNG")
-    print("Successfully saved as ===> ",path,".png  in  /",args.output,"\n",sep="")
+    bg_removed_img.save((os.path.join(OUTPUT_HOME, args.output, path+".png")), "PNG")
+    print("Successfully saved as ===> ",path,".png  in", OUTPUT_HOME, "/",args.output,"\n",sep="")
 
 def alpha_composite(src, dst, path):
     '''
@@ -193,8 +194,8 @@ def make_silhouette(img, mask, path):
 def execute_image_processing(model, image_set):
     if not os.path.exists(os.path.join(ROOT_DIR, "_logs")):
         os.mkdir(os.path.join(ROOT_DIR, "_logs"))
-    if not os.path.exists(os.path.join(ROOT_DIR, args.output)):
-        os.mkdir(os.path.join(ROOT_DIR, args.output))
+    if not os.path.exists(os.path.join(OUTPUT_HOME, args.output)):
+        os.mkdir(os.path.join(OUTPUT_HOME, args.output))
     if not os.path.exists(os.path.join(ROOT_DIR, "_logs", "eval_mask_json_"+args.organism)):
         os.mkdir(os.path.join(ROOT_DIR, "_logs", "eval_mask_json_"+args.organism))
 
@@ -250,24 +251,22 @@ def sum_time(elapsed_times):
         sum += d
     return sum
 
-def config_setup(use_coco):
-    if use_coco is True:
-        config = core.CocoConfig()
-    else:
-        config = core.sashimiConfig()
-        
+def config_setup(organism, regions, imgsrc):
+
+    config = core.CocoConfig()
     dataset = core.CocoDataset()
 
     class InferenceConfig(config.__class__):
         GPU_COUNT = 1
         IMAGES_PER_GPU = 1
-        NAME = args.organism
-        REGION = args.regions
+        NAME = organism
+        REGIONS = regions
 
     config = InferenceConfig()
     config.display()
 
-    dataset.load_custom(DATASET_DIR, "val", args.imgsrc)
+    dataset.load_custom(DATASET_DIR, "val", organism, regions, imgsrc)
+
     dataset.prepare()
 
     print("Images: {}\nClasses: {}".format(len(dataset.image_ids), dataset.class_names))
@@ -287,7 +286,6 @@ if __name__ == '__main__':
     parser.add_argument('--segmentation', '-z', required=False, type=int, metavar="0", help='set to 0 (false) to fill backgrounds of previously segmented images with desired background colors')
     parser.add_argument('--model', '-m', required=False, default=os.path.join(MODEL_DIR, "fish_segmentation_model_schwartz_v1-0-0.h5"), metavar="/path/to/custom/model.h5", help='Path to custom segmentation model to use (defaults to models/fish_segmentation_model_schwartz_v1-0-0.h5)')
     parser.add_argument('--organism', '-n', required=False, default="fish", metavar="name of class label to detect", help="String with name of class label to detect, should match that used in training data. (Defaults to 'fish' for default fish segmentation model.) You can specify a label present in the COCO dataset along with setting --coco/-c to True to utilize the pre-trained weights in COCO.")
-    parser.add_argument('--coco', '-c', required=False, default=False, metavar="use the COCO pre-trained weights for detection instead of custom model", help="Set to True to use the default pre-trained COCO weights for object detection instead of a custom model (defaults to False).")
     parser.add_argument('--regions', '-y', required=False, default="_fish-segmentation-regions.json", metavar="Name of manual segmentation regions file.", help="Should be placed in both train/ and val/ folders, and should have the same exact filename within each of those two folders. (Defaults to _fish-segmentation-regions.json)")
     parser.add_argument('--imgsrc', '-j', required=False, default="url", metavar="Where are source images located ('local' or 'url')", help="Specify 'local' or 'url' depending on how paths are provided in your regions .JSON file. Important for distribution purposes. Default is URL -- images will be downloaded from source initially, and won't download again unless directory no longer exists. Use 'local' if images are stored directly in the respective train/ and val/ directories.")
     
@@ -299,8 +297,10 @@ if __name__ == '__main__':
     print("Input Directory for Images to Segment: ", args.input)
     print("Output Location for Background-Removed Images: ", args.output)
 
-    DATASET_DIR = os.path.join(ROOT_DIR, "sashimi", args.organism)
-    WEIGHTS_PATH = os.path.join(MODEL_DIR, args.model)
+    DATASET_DIR = os.path.join(ROOT_DIR, "sashimi", "fish")
+
+    if not os.path.exists(OUTPUT_HOME):
+        os.mkdir(OUTPUT_HOME)
 
     if not os.path.exists(DATASET_DIR):
         os.mkdir(DATASET_DIR)
@@ -310,17 +310,21 @@ if __name__ == '__main__':
         os.mkdir(os.path.join(DATASET_DIR, "val"))
 
     # download and unpack necessary data
+    WEIGHTS_PATH = os.path.join(MODEL_DIR, "mask_rcnn_coco.h5")
     if not os.path.exists(WEIGHTS_PATH):
-        download_model(MODEL_URL, WEIGHTS_PATH)
-    if not os.path.exists(COCO_WEIGHTS):
-        download_model(COCO_URL, COCO_WEIGHTS)
+        download_model(COCO_URL, WEIGHTS_PATH)
 
-    config, dataset = config_setup(args.coco)
+    WEIGHTS_PATH = args.model
+    if not os.path.exists(WEIGHTS_PATH):
+        download_model(MODEL_URL, WEIGHTS_PATH)     
+
+    config, dataset = config_setup(args.organism, args.regions, args.imgsrc)
 
     welcome_message()
     welcome_fish()
 
     model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
+    
     print("Loading segmentation model: ", WEIGHTS_PATH)
     model.load_weights(WEIGHTS_PATH, by_name=True)
     print("Segmentation model successfully loaded from: ", WEIGHTS_PATH, "\n")
