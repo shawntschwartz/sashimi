@@ -86,7 +86,7 @@ imgaug==0.4.0
 pycocotools==2.0 (use pycocotools-windows==2.0.0.2 instead for Windows)
 ```
 
-## Running the Sashimi pipeline
+## Step 3: Running the Sashimi pipeline
 Users can specify the input directory of organismal images via the *--input* flag (input requirement: a local directory in which JPEG, JPG, or PNG images of fish containing their background pixels are stored). The desired output directory can be specified via the *--output* flag when executing the *Python* script from the command line interpreter (if the specified output directory does not exist, the program will first create the directory as specified by the user before performing the automated background removal procedure).
 
 It is recommended to place the input directory of images inside the cloned _Sashimi_ repository on your machine.
