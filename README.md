@@ -154,6 +154,31 @@ $ python sashimi.py --input=_examples/fish --output=fish_demo --model=path/to/cu
 
 (_Epibulus insidiator_)
 
+## Evaluating Segmentations of Validation Images
+You can use the command line tool we have constructed to evaluate ground truth (manual) reference segmentation masks for validation images with those automatically segmented by the model. 
+
+### Instructions:
+1. Please specify the automatically segmented image from _Sashimi_ that you would like to analyze (--image/-i).
+2. Please specify the corresponding .JSON evaluation segmentation mask automatically generated for Sashimi for the specified image in (--evalmask/-e).
+
+_Optional arguments:_
+* Please specify the corresponding .JSON ground truth segmentation mask you manually created for the specified image (--gtmask/-gt).
+* Please specify the directory you would like to output the evaluation data to if desired (--output/-o).
+
+Below is an example input call and output evaluation csv file and visualization image for a fish in the validation image dataset.
+```shell
+$ python _tools/evaluate-segmentations.py --image=_outputs/segmented_fish/-651227094.png --evalmask=_logs/eval_mask_json_fish/-651227094.json --gtmask=sashimi/logs/gt_mask_json_fish/-651227094.json --output=my_evaluations
+```
+
+### Segmentation Evaluation Outputs
+#### 1) CSV File of 4 Image Segmentation Evaluation Metrics
+|source_image                          |eval_image_id                            |gt_image_id                                   |pixel_acc         |mean_acc          |mean_IU           |freq_weighted_IU  |
+|--------------------------------------|-----------------------------------------|----------------------------------------------|------------------|------------------|------------------|------------------|
+|_outputs/segmented_fish/-651227094.png|_logs/eval_mask_json_fish/-651227094.json|sashimi/logs/gt_mask_json_fish/-651227094.json|0.9707563405797102|0.9688295253210177|0.9424946076208486|0.9430852110936757|
+
+#### 2) Visualization Image of Ground Truth Reference and Deep Learning Segmentation
+![Example of Segmentation Evaluation Output](_examples/readme-imgs/sample-evaluation.png)
+
 ## Training a New Model
 1. Gather representive set of organism images and separate into `train/` and `val/` directories within `sashimi/sashimi/{organism_name_here}/`.
 2. Head over to [https://www.robots.ox.ac.uk/~vgg/software/via/via-1.0.6.html](https://www.robots.ox.ac.uk/~vgg/software/via/via-1.0.6.html) and manually annotate each training and validation image. For region attributes, create a field called "name" and then, for every polygonal annotation mask you draw over your organism of interest, label that region a generic name of your organism (e.g., "monkey"). Repeat for every image within the train and validation image sets. See screen shot below:
