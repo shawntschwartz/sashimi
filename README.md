@@ -50,11 +50,16 @@ $ python -m venv sashimi_env
 $ source sashimi_env/bin/activate
 
 ## On Windows:
-$  .\sashimi_env\Scripts\activate
+$ .\sashimi_env\Scripts\activate
 ```
 ```bash
 # Install necessary requirements
+## On macOS and Linux:
 $ pip install -r requirements.txt
+
+## On Windows
+$ pip install -r requirements.windows.txt
+
 ```
 ```bash
 # Deactivate environment when no longer using the sashimi program
@@ -64,7 +69,7 @@ $ deactivate
 ## Requirements
 Users should have the following requirements installed:
 ```
-// Available in 'requirements.txt'
+// Available in 'requirements.txt' / 'requirements.windows.txt
 numpy==1.16.4
 scipy==1.2.1
 Pillow==6.1.0
@@ -78,6 +83,7 @@ opencv-python==4.1.1.26
 h5py==2.9.0
 ipython==7.6.1
 imgaug==0.4.0
+pycocotools==2.0 (use pycocotools-windows==2.0.0.2 instead for Windows)
 ```
 
 ## Running the Sashimi pipeline
