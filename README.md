@@ -26,13 +26,59 @@ We present a software module written in *Python* (Version 3.7.3) that is accessi
 
 *To view the _Sashimi_ open-source organismal model sharing web-interface, please visit: [https://sashimi.shawntylerschwartz.com/](https://sashimi.shawntylerschwartz.com/).*
 
+_Sashimi_ was built and tested on Python 3.7. Please consider using Docker to ensure proper compatibility; instructions for installing and using Docker are outlined below.
+
+## Step 0: Install Docker (Skip if already installed)
+Head over to [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop) and install `Docker Desktop` on your OS.
+
+Then, in your terminal, confirm Docker installed properly by typing in
+```shell
+$ docker -v
+```
+If it installed properly, you should see something like `Docker version 20.10.6, build 370c289` (though this may look slightly different depending on the exact version/build that was installed).
+
 ## Step 1: Clone the Repository
-To get started, clone the repository:
+To get started, clone this repository to the desired location on your computer:
 ```bash
 $ git clone https://github.com/ShawnTylerSchwartz/sashimi.git
 ```
 
-Specific installation instructions and requirements, as well as instructions to execute our module, are outlined in our GitHub repository’s [requirements.txt](requirements.txt) file. At this release, users should ensure that they have **Python (Version > 3.4)** installed on their system.
+## Step 2: Use Docker to Execute Sashimi
+The following steps will outline the Docker run of _Sashimi_. See __Step 2: Create a Virtual Environment and Install Requirements__ if you'd like to skip using Docker and install dependencies manually (warning: will probably break if not using Python Version 3.7).
+
+1. Head into your terminal and change directories in the _sashimi_ repository directory:
+```shell
+$ cd /path/to/sashimi
+```
+
+
+2. Then, build docker image:
+```shell
+$ docker build -t sashimi .
+```
+
+
+3. To execute Sashimi with default settings, run:
+```shell
+$ docker run sashimi -i "_examples/fish" -o "fish_outputs"
+```
+__NOTE:__ You can use any of the arguments outlined further along in this README within this docker run command line call; though, we are showing the docker run call with just the default `input` and `output` calls here for simplicity. See below for additional examples of standard python command line calls for _Sashimi_ that could be adapted to use within the docker command line call shown here.
+
+
+4. Finally, extract segmented images from the latest Docker container run into the `_outputs/` directory located in your cloned `sashimi/` repository. We have created convenience scripts (`.cmd` for Windows; `.sh` for Mac/Linux) that will automatically extract the latest docker container id and copy the output files over into the `outputs/` directory in the _Sashimi_ repository directory automatically. See example command line calls below to execute:
+4.1. *For Mac/Linux*
+```shell
+$ bash get_sashimi.sh
+```
+
+4.2. *For Windows:*
+```shell
+$ get_sashimi.cmd
+```
+
+
+---
+
 
 ## Step 2: Create a Virtual Environment and Install Requirements
 We highly recommend using a virtual environment to run this program. Here is an example:
