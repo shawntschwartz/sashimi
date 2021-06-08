@@ -66,6 +66,8 @@ __NOTE:__ You can use any of the arguments outlined further along in this README
 
 
 4. Finally, extract segmented images from the latest Docker container run into the `_outputs/` directory located in your cloned `sashimi/` repository. We have created convenience scripts (`.cmd` for Windows; `.sh` for Mac/Linux) that will automatically extract the latest docker container id and copy the output files over into the `outputs/` directory in the _Sashimi_ repository directory automatically. See example command line calls below to execute:
+
+
 4.1. *For Mac/Linux*
 ```shell
 $ bash get_sashimi.sh
@@ -199,6 +201,8 @@ $ python sashimi.py --input=_examples/fish --output=fish_demo --model=path/to/cu
 ![Example Segmented Fish](_examples/readme-imgs/Epibulus_insidiator.png)
 
 (_Epibulus insidiator_)
+
+---
 
 ## Evaluating Segmentations of Validation Images
 You can use the command line tool we have constructed to evaluate ground truth (manual) reference segmentation masks for validation images with those automatically segmented by the model. 
