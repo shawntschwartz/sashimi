@@ -93,7 +93,7 @@ def load_img(path):
 def detect_mask(model, img):
     return model.detect([img], verbose=0)
 
-def draw_mask(img, mask):
+def draw_mask(img, mask, organism):
     tmp_result = mask[0]
 
     if(len(tmp_result['scores']) > 1):
@@ -106,23 +106,70 @@ def draw_mask(img, mask):
         #print(tmp_mask.shape)
 
     tmp_mask = tmp_mask.astype(int)
-    tmp_img_mtrx_mask = img
+    #tmp_img_mtrx_mask = img
 
+    #all_recovered_masks = np.array(tmp_img_mtrx_mask)
+    all_recovered_masks = []
+    print("mask shape [2]: ", tmp_mask.shape[2])
     if(tmp_mask.shape[2] > 0):
-        for ii in range(tmp_img_mtrx_mask.shape[2]):
-            tmp_img_mtrx_mask[:,:,ii] = tmp_img_mtrx_mask[:,:,ii] * tmp_mask[:,:,0]
+        #for ii in range(tmp_img_mtrx_mask.shape[2]):
+        for ii in range(tmp_mask.shape[2]):
+            #tmp_img_mtrx_mask = img
+            #for jj in range(tmp_mask.shape[2]):
+            tmp_img_mtrx_mask = load_img(organism)
+            for jj in range(tmp_img_mtrx_mask.shape[2]):
+                ##tmp_img_mtrx_mask[:,:,ii] = tmp_img_mtrx_mask[:,:,ii] * tmp_mask[:,:,jj]
+                tmp_img_mtrx_mask[:,:,jj] = tmp_img_mtrx_mask[:,:,jj] * tmp_mask[:,:,ii]
+                #all_recovered_masks = np.append(all_recovered_masks, tmp_img_mtrx_mask)
+            all_recovered_masks.append(tmp_img_mtrx_mask)
+        print("Length of scores: ", len(tmp_result['scores']))
+        all_recovered_masks = np.stack(all_recovered_masks, axis=0)
+        print("Number of masks recovered (of np stacked version): ", all_recovered_masks.shape)
     else:
         print("Could not draw reliable mask... skipping.")
         return "NULL", "NULL"
         
-    return tmp_img_mtrx_mask, tmp_mask
+    ##return tmp_img_mtrx_mask, tmp_mask
+    #all_recovered_masks = np.delete(all_recovered_masks, 0)
+    return all_recovered_masks, tmp_mask
 
 def remove_bg(img, mask, path):
-    height, width = img.shape[:2]
-    alpha_img = np.dstack((img, np.zeros((height, width), dtype=np.uint8)+255))
-    alpha_img[:,:,3] = alpha_img[:,:,3] * mask[:,:,0]
-    print("Background successfully removed!")
-    save_image(alpha_img, path)
+    print("---------------------------")
+    print("Number of masks to remove and save: ", mask.shape[2])
+    print("Number of images imported: ")
+    print(img[0].shape)
+    if(mask.shape[2] == 1):
+        height, width = img[0].shape[:2]
+        print(img[0].shape)
+        alpha_img = np.dstack((img[0], np.zeros((height, width), dtype=np.uint8)+255))
+        alpha_img[:,:,3] = alpha_img[:,:,3] * mask[:,:,0]
+        print("Background successfully removed!")
+        save_image(alpha_img, path)
+    else:
+        # for ii in range(mask.shape[2]):
+        #     height, width = img[ii].shape[:2]
+        #     alpha_img = np.dstack((img[ii], np.zeros((height, width), dtype=np.uint8)+255))
+        #     for jj in range(alpha_img.shape[2]):
+        #         alpha_img[:,:,jj] = alpha_img[:,:,jj] * mask[:,:,ii]
+        #         print("Background successfully removed for image: ", (ii+1))
+        #         path_mod = (path + "_" + str(ii+1))
+        #         save_image(alpha_img, path_mod)
+        # for ii in range(mask.shape[2]):
+        #     height, width = img[ii].shape[:2]
+        #     alpha_img = np.dstack((img[ii], np.zeros((height, width), dtype=np.uint8)+255))
+        #     print("Alpha image shape:", alpha_img.shape)
+        #     for jj in range(alpha_img.shape[2]):
+        #         alpha_img[:,:,3] = alpha_img[:,:,3] * mask[:,:,ii]
+        #         print("Background successfully removed for image: ", (ii+1))
+        #         path_mod = (path + "_" + str(ii+1))
+        #         save_image(alpha_img, path_mod)
+        for ii in range(mask.shape[2]):
+            height, width = img[ii].shape[:2]
+            alpha_img = np.dstack((img[ii], np.zeros((height, width), dtype=np.uint8)+255))
+            alpha_img[:,:,3] = alpha_img[:,:,3] * mask[:,:,ii]
+            print("Background successfully removed for image: ", (ii+1))
+            path_mod = (path + "_" + str(ii+1))
+            save_image(alpha_img, path_mod)
 
 def save_image(img, path):
     bg_removed_img = Image.fromarray(img, 'RGBA')
@@ -208,7 +255,7 @@ def execute_image_processing(model, image_set):
             loaded_organism = load_img(organism)
             print("Segmenting (",counter,"/",len(image_set),"): ",organism,sep="")
             organism_detection_result = detect_mask(model, loaded_organism)
-            tmp_masked_image, tmp_mask = draw_mask(loaded_organism, organism_detection_result)
+            tmp_masked_image, tmp_mask = draw_mask(loaded_organism, organism_detection_result, organism)
 
             if((tmp_masked_image == "NULL") & (tmp_mask == "NULL")):
                 continue
