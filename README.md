@@ -6,20 +6,17 @@ Department of Ecology and Evolutionary Biology, University of California, Los An
 
 *Correspondence concerning this article should be addressed to Shawn Schwartz, Terasaki Life Sciences Building 2153, University of California, Los Angeles, CA 90095, USA. Email: shawnschwartz@ucla.edu
 
-__*APPLICATION PAPER UNDER REVIEW*__
+__*CITATION*__
+Schwartz, S. T., & Alfaro, M. E. (in press). A toolkit for facilitating high-throughput organismal image segmentation using deep learning. _Methods in Ecology and Evolution_.
 
 ## Abstract
-1. One crucial image preprocessing step in any image analysis workflow is image segmentation, or the ability to clearly contrast the foreground target from the background noise in an image. This procedure is typically done manually, creating a potential bottleneck for efforts to quantify biodiversity from image databases. Advances in image segmentation meta-algorithms for deep learning provide an opportunity to relax this bottleneck, though the most accessible pre-trained convolutional neural networks have been trained on a small fraction of biodiversity, severely limiting their utility.
+1.	Digitized specimens are an indispensable resource for rapidly acquiring big datasets and typically must be preprocessed prior to conducting analyses. One crucial image preprocessing step in any image analysis workflow is image segmentation, or the ability to clearly contrast the foreground target from the background noise in an image. This procedure is typically done manually, creating a potential bottleneck for efforts to quantify biodiversity from image databases. Image segmentation meta-algorithms using deep learning provide an opportunity to relax this bottleneck. However, the most accessible pre-trained convolutional neural networks (CNNs) have been trained on a small fraction of biodiversity, thus limiting their utility.
 
+2.	We trained a deep learning model to automatically segment target fish from images with both standardized and complex, noisy backgrounds. We then assessed the performance of our deep learning model using qualitative visual inspection and quantitative image segmentation metrics of pixel overlap between reference segmentation masks generated manually by experts and those automatically predicted by our model.
 
-2. We trained a deep learning model to automatically segment target fish from images with both standardized and complex, noisy backgrounds. We then assessed the performance of our deep learning model using qualitative visual inspection and quantitative image segmentation metrics of pixel overlap between reference segmentation masks generated manually by experts and those automatically predicted by our model.
+3.	Visual inspection revealed that our model segmented fishes with high precision and relatively few artifacts. These results suggest that the meta-algorithm (Mask R-CNN), in which our current fish segmentation model relies on, is well-suited for generating high-fidelity segmented specimen images across a variety of background contexts at rapid pace.
 
-
-3. Visual inspection revealed that our model segmented fishes with high precision and relatively few artifacts. These results suggest that the meta-algorithm (Mask R-CNN), in which our current fish segmentation model relies on, is well-suited for generating high-fidelity segmented specimen images across a variety of background contexts at rapid pace.
-
-
-4. We present _Sashimi_, an easy-to-use command line toolkit to facilitate rapid, automated high-throughput image segmentation of digitized organisms. _Sashimi_ is accessible to non-programmers and does not require experience with deep learning to use. The flexibility of Mask R-CNN allows users to easily generate a segmentation model for use on diverse animal and plant images given relatively modest training datasets. To help grow the taxonomic scope of images that can be recognized, _Sashimi_ also includes a central database for sharing and distributing custom-trained segmentation models of other unrepresented organisms. Lastly, _Sashimi_ includes both auxiliary image preprocessing functions useful for some popular downstream color pattern analysis workflows, as well as a simple script to aid users in qualitatively and quantitatively assessing segmentation model performance for complementary sets of automatically and manually segmented images.
-
+4.	We present Sashimi, a user-friendly command line toolkit to facilitate rapid, automated high-throughput image segmentation of digitized organisms. Sashimi is accessible to non-programmers and does not require experience with deep learning to use. The flexibility of Mask R-CNN allows users to generate a segmentation model for use on diverse animal and plant images using transfer learning with training datasets as small as a few hundred images. To help grow the taxonomic scope of images that can be recognized, Sashimi also includes a central database for sharing and distributing custom-trained segmentation models of other unrepresented organisms. Lastly, Sashimi includes both auxiliary image preprocessing functions useful for some popular downstream color pattern analysis workflows, as well as a simple script to aid users in qualitatively and quantitatively assessing segmentation model performance for complementary sets of automatically and manually segmented images.
 
 ## Summary
 We present a software module written in *Python* (Version 3.7.3) that is accessible by cloning the GitHub repository [https://github.com/ShawnTylerSchwartz/sashimi](https://github.com/ShawnTylerSchwartz/sashimi). Training and inspiration based on Matterport's open-source Keras and TensorFlow implementation of Mask R-CNN [https://github.com/matterport/Mask_RCNN](https://github.com/matterport/Mask_RCNN).
@@ -43,7 +40,7 @@ To get started, clone this repository to the desired location on your computer:
 $ git clone https://github.com/ShawnTylerSchwartz/sashimi.git
 ```
 
-## Step 2: Use Docker to Execute Sashimi
+## Step 2a: Use Docker to Execute Sashimi
 The following steps will outline the Docker run of _Sashimi_. See __Step 2: Create a Virtual Environment and Install Requirements__ if you'd like to skip using Docker and install dependencies manually (warning: will probably break if not using `Python Version 3.7`).
 
 1. Head into your terminal and change directories in the _sashimi_ repository directory:
@@ -82,7 +79,7 @@ $ get_sashimi.cmd
 ---
 
 
-## Step 2: Create a Virtual Environment and Install Requirements
+## Step 2b: Create a Virtual Environment and Install Requirements
 If not using Docker, then we highly recommend using a virtual environment to run this program. Here is an example:
 ```bash
 # Install virtualenv if not already installed
