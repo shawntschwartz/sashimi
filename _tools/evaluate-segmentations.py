@@ -146,7 +146,7 @@ def save_eval_data(eval_mask, gt_mask_scaled, img_path, eval_file, gt_file, save
         row = [img_path, eval_file, gt_file, pxacc, pxacc_mean, IU_mean, IU_freq_weighted]
         writer.writerow(row)
 
-# functions adapted from: https://github.com/martinkersner/py_img_seg_eva
+## functions adapted from Martin Keršner's code: https://github.com/martinkersner/py_img_seg_eval
 def extract_classes(mask):
     cl = np.unique(mask)
     n_cl = len(cl)
