@@ -6,7 +6,7 @@ Department of Ecology and Evolutionary Biology, University of California, Los An
 
 *Correspondence concerning this article should be addressed to Shawn Schwartz, Terasaki Life Sciences Building 2153, University of California, Los Angeles, CA 90095, USA. Email: shawnschwartz@ucla.edu
 
-__*CITATION*__
+__*CITATION:*__
 Schwartz, S. T., & Alfaro, M. E. (in press). A toolkit for facilitating high-throughput organismal image segmentation using deep learning. _Methods in Ecology and Evolution_.
 
 ## Abstract
