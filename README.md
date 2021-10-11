@@ -1,4 +1,6 @@
 [![DOI](https://zenodo.org/badge/doi/10.1111/2041-210X.13712.svg)](https://doi.org/10.1111/2041-210X.13712)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.5353752.svg)](https://doi.org/10.5281/zenodo.5353752)
+[![DOI](https://zenodo.org/badge/doi/10.5068/D16M4N.svg)](https://doi.org/10.5068/D16M4N)
 
 # *Sashimi*: A toolkit for facilitating high-throughput organismal image segmentation using deep learning
 
@@ -10,17 +12,6 @@ Department of Ecology and Evolutionary Biology, University of California, Los An
 
 __*PAPER CITATION:*__
 Schwartz, S. T., & Alfaro, M. E. (2021). A toolkit for facilitating high-throughput organismal image segmentation using deep learning. _Methods in Ecology and Evolution_. https://doi.org/10.1111/2041-210X.13712
-
-
-__*PEER REVIEW*__
-The peer review history for this article is available at https://publons.com/publon/10.1111/2041-210X.13712.
-
-__*DATA AVAILABILITY STATEMENT*__
-The *Sashimi* toolkit is freely accessible from GitHub (https://github.com/ShawnTylerSchwartz/sashimi). The source code is also archived on Zenodo at https://doi.org/10.5281/zenodo.5353751 (Schwartz & Alfaro, 2021a). Data are archived on Dryad at https://doi.org/10.5068/D16M4N (Schwartz & Alfaro, 2021b). The *Sashimi* website provides an open-access repository containing the fish segmentation model used in the current study and will house future models as they become available (https://sashimi.shawntylerschwartz.com).
-
-Data citations (from above):
-    - Schwartz, S. T., & Alfaro, M. E. (2021a). Sashimi: A toolkit for facilitating high- throughput organismal image segmentation using deep learning. *In Methods  in  Ecology  and  Evolution* (v2.0.0). Zenodo. https://doi.org/10.5281/zenodo.5353752
-    - Schwartz, S. T., & Alfaro, M. E. (2021b). Data from: Sashimi: A toolkit for  facilitating  high- throughput  organismal  image  segmentation using deep learning. *Methods  in  Ecology  and  Evolution*. https://doi.org/10.5068/D16M4N
 
 ## Abstract
 1.	Digitized specimens are an indispensable resource for rapidly acquiring big datasets and typically must be preprocessed prior to conducting analyses. One crucial image preprocessing step in any image analysis workflow is image segmentation, or the ability to clearly contrast the foreground target from the background noise in an image. This procedure is typically done manually, creating a potential bottleneck for efforts to quantify biodiversity from image databases. Image segmentation meta-algorithms using deep learning provide an opportunity to relax this bottleneck. However, the most accessible pre-trained convolutional neural networks (CNNs) have been trained on a small fraction of biodiversity, thus limiting their utility.
@@ -254,3 +245,14 @@ $ python core.py train --dataset=/path/to/dir/containing/both/train+val_dirs/ --
 $ python sashimi.py --input=some_imgs --output=some_imgs_segmented --model=path/to/custom/model.h5 --regions=_mycustom-segmentation-regions.json --organism=monkey --imgsrc=local
 ```
 7. Submit and share the model materials on [https://sashimi.shawntylerschwartz.com/](https://sashimi.shawntylerschwartz.com/) to share with the rest of the community!
+
+
+__*PEER REVIEW*__
+The peer review history for this article is available at https://publons.com/publon/10.1111/2041-210X.13712.
+
+__*DATA AVAILABILITY STATEMENT*__
+The *Sashimi* toolkit is freely accessible from GitHub (https://github.com/ShawnTylerSchwartz/sashimi). The source code is also archived on Zenodo at https://doi.org/10.5281/zenodo.5353751 (Schwartz & Alfaro, 2021a). Data are archived on Dryad at https://doi.org/10.5068/D16M4N (Schwartz & Alfaro, 2021b). The *Sashimi* website provides an open-access repository containing the fish segmentation model used in the current study and will house future models as they become available (https://sashimi.shawntylerschwartz.com).
+
+__*Data citations (from above):*__
+* Schwartz, S. T., & Alfaro, M. E. (2021a). Sashimi: A toolkit for facilitating high- throughput organismal image segmentation using deep learning. *In Methods  in  Ecology  and  Evolution* (v2.0.0). Zenodo. https://doi.org/10.5281/zenodo.5353752
+* Schwartz, S. T., & Alfaro, M. E. (2021b). Data from: Sashimi: A toolkit for  facilitating  high- throughput  organismal  image  segmentation using deep learning. *Methods  in  Ecology  and  Evolution*. https://doi.org/10.5068/D16M4N
